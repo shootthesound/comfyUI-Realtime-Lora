@@ -9,7 +9,7 @@ This node trains LoRAs on-the-fly from your images without leaving ComfyUI. SDXL
 
 No config files to edit, no command line. Just connect images and go.
 
-If this node saves you time or helps your workflow, consider [buying me a coffee](https://buymeacoffee.com/lorasandlenses). Due to family circumstances I'm short on work right now, which is partly why I've had the time to build this. Donations are genuinely appreciated and help me keep developing this tool. There will be options for early access to new features for supporters.
+If this node saves you time or helps your workflow, consider [buying me a coffee](https://buymeacoffee.com/lorasandlenses) — supporters get early access to new features. Due to family circumstances I'm short on work right now, which is partly why I've had the time to build this. Donations genuinely help me keep developing this tool.
 
 **Personal note:** I think SDXL is due for a revival. It trains fast, runs on reasonable hardware, and the results are solid. For quick iteration - testing a concept before committing to a longer train, locking down a subject for consistency, or even training on first and last frames for Wan video work - SDXL hits a sweet spot that newer models don't always match. Sometimes the "old" tool is still the right one.
 

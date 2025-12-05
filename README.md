@@ -21,6 +21,8 @@ If this node saves you time or helps your workflow, consider [buying me a coffee
 - FLUX.1-dev
 - Wan 2.2 (High/Low/Combo)
 
+**Note on Wan 2.2 modes:** Wan uses a two-stage noise model - High handles early denoising steps, Low handles later steps. You can train separate LoRAs for each, or use Combo mode which trains a single LoRA across all noise steps that works with both High and Low models.
+
 ## Requirements
 
 You need to install the training backend(s) separately:

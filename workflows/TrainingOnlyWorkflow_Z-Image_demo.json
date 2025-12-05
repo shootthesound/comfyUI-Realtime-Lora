@@ -1,0 +1,863 @@
+{
+  "id": "92112d97-bb64-4b44-86f2-ea5691ef8f6e",
+  "revision": 0,
+  "last_node_id": 80,
+  "last_link_id": 162,
+  "nodes": [
+    {
+      "id": 29,
+      "type": "LoadImage",
+      "pos": [
+        -1899.7019401757116,
+        -39.665001232435756
+      ],
+      "size": [
+        395.5046924121225,
+        376.092132305915
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            152
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "original_3a930bdd-a01e-42d5-b8a4-8ebaf467384d.webp",
+        "image"
+      ]
+    },
+    {
+      "id": 32,
+      "type": "LoadImage",
+      "pos": [
+        -1897.3742566951246,
+        698.405647918002
+      ],
+      "size": [
+        392.7450420874152,
+        334.6973774353048
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            154
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "download (1).jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 31,
+      "type": "LoadImage",
+      "pos": [
+        -1481.8263702119325,
+        699.6559765208757
+      ],
+      "size": [
+        373.4274898144638,
+        341.59650324707343
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            155
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "Starry-Night-canvas-Vincent-van-Gogh-New-1889.webp",
+        "image"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "LoadImage",
+      "pos": [
+        -1479.098549522403,
+        -29.447645769383254
+      ],
+      "size": [
+        407.9231188733056,
+        366.43335616943943
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image",
+          "name": "image",
+          "type": "COMBO",
+          "widget": {
+            "name": "image"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            153
+          ]
+        },
+        {
+          "localized_name": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "Arn-Van-Gogh-Secondary-1.webp",
+        "image"
+      ]
+    },
+    {
+      "id": 59,
+      "type": "String",
+      "pos": [
+        -1903.96103902309,
+        -289.2550430271083
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "String",
+          "name": "String",
+          "type": "STRING",
+          "widget": {
+            "name": "String"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            156
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyLiterals",
+        "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "zwxem painting of corn field"
+      ]
+    },
+    {
+      "id": 61,
+      "type": "String",
+      "pos": [
+        -1489.0050028571977,
+        -280.3313861058403
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "String",
+          "name": "String",
+          "type": "STRING",
+          "widget": {
+            "name": "String"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            157
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyLiterals",
+        "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "zwxem painting of a tree in a field"
+      ]
+    },
+    {
+      "id": 60,
+      "type": "String",
+      "pos": [
+        -1902.842945889929,
+        457.6381465505763
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "String",
+          "name": "String",
+          "type": "STRING",
+          "widget": {
+            "name": "String"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            158
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyLiterals",
+        "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "zwxem portrait painting of a man"
+      ]
+    },
+    {
+      "id": 62,
+      "type": "String",
+      "pos": [
+        -1497.6567994365214,
+        461.7230381340444
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "String",
+          "name": "String",
+          "type": "STRING",
+          "widget": {
+            "name": "String"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            159
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyLiterals",
+        "ver": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
+        "Node name for S&R": "String",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "zwxem painting of a city under a starry night sky"
+      ]
+    },
+    {
+      "id": 67,
+      "type": "PrimitiveString",
+      "pos": [
+        -623.94096059178,
+        508.5040753151047
+      ],
+      "size": [
+        399.114163815623,
+        60.827317455816456
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "value",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "<----- Point me at your AI-Toolkit install",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "PrimitiveString",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "<----- Point me at your AI-Toolkit install"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 80,
+      "type": "RealtimeLoraTrainer",
+      "pos": [
+        -1034.6606275351087,
+        277.8110443780382
+      ],
+      "size": [
+        400,
+        492
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "image_1",
+          "name": "image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 152
+        },
+        {
+          "localized_name": "caption_1",
+          "name": "caption_1",
+          "shape": 7,
+          "type": "STRING",
+          "link": 156
+        },
+        {
+          "localized_name": "image_2",
+          "name": "image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 153
+        },
+        {
+          "localized_name": "caption_2",
+          "name": "caption_2",
+          "shape": 7,
+          "type": "STRING",
+          "link": 157
+        },
+        {
+          "localized_name": "image_3",
+          "name": "image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 154
+        },
+        {
+          "localized_name": "caption_3",
+          "name": "caption_3",
+          "shape": 7,
+          "type": "STRING",
+          "link": 158
+        },
+        {
+          "localized_name": "image_4",
+          "name": "image_4",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 155
+        },
+        {
+          "localized_name": "caption_4",
+          "name": "caption_4",
+          "shape": 7,
+          "type": "STRING",
+          "link": 159
+        },
+        {
+          "localized_name": "inputcount",
+          "name": "inputcount",
+          "type": "INT",
+          "widget": {
+            "name": "inputcount"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "images_path",
+          "name": "images_path",
+          "type": "STRING",
+          "widget": {
+            "name": "images_path"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "architecture",
+          "name": "architecture",
+          "type": "COMBO",
+          "widget": {
+            "name": "architecture"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ai_toolkit_path",
+          "name": "ai_toolkit_path",
+          "type": "STRING",
+          "widget": {
+            "name": "ai_toolkit_path"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "caption",
+          "name": "caption",
+          "type": "STRING",
+          "widget": {
+            "name": "caption"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "training_steps",
+          "name": "training_steps",
+          "type": "INT",
+          "widget": {
+            "name": "training_steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "learning_rate",
+          "name": "learning_rate",
+          "type": "FLOAT",
+          "widget": {
+            "name": "learning_rate"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "lora_rank",
+          "name": "lora_rank",
+          "type": "INT",
+          "widget": {
+            "name": "lora_rank"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "vram_mode",
+          "name": "vram_mode",
+          "type": "COMBO",
+          "widget": {
+            "name": "vram_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_lora",
+          "name": "keep_lora",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "keep_lora"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "output_name",
+          "name": "output_name",
+          "type": "STRING",
+          "widget": {
+            "name": "output_name"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "lora_path",
+          "name": "lora_path",
+          "type": "STRING",
+          "links": [
+            162
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "shootthesound/comfyUI-Realtime-Lora",
+        "ver": "7c5d8e9358c7be1a4995a56fede6d8c3fd534616",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        4,
+        null,
+        "",
+        "Z-Image Turbo",
+        "S:\\Auto\\Aitoolkit\\ai-toolkit",
+        "",
+        500,
+        0.0005,
+        16,
+        "Low (768px)",
+        true,
+        "MyLora"
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 79,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -561.6217376724688,
+        243.18298495101558
+      ],
+      "size": [
+        253.14566331300148,
+        96.37108328003751
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "link": 162
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Where The Lora is Saved",
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        }
+      },
+      "widgets_values": [
+        "MyLora_20251205_170614"
+      ]
+    }
+  ],
+  "links": [
+    [
+      152,
+      29,
+      0,
+      80,
+      0,
+      "IMAGE"
+    ],
+    [
+      153,
+      30,
+      0,
+      80,
+      2,
+      "IMAGE"
+    ],
+    [
+      154,
+      32,
+      0,
+      80,
+      4,
+      "IMAGE"
+    ],
+    [
+      155,
+      31,
+      0,
+      80,
+      6,
+      "IMAGE"
+    ],
+    [
+      156,
+      59,
+      0,
+      80,
+      1,
+      "STRING"
+    ],
+    [
+      157,
+      61,
+      0,
+      80,
+      3,
+      "STRING"
+    ],
+    [
+      158,
+      60,
+      0,
+      80,
+      5,
+      "STRING"
+    ],
+    [
+      159,
+      62,
+      0,
+      80,
+      7,
+      "STRING"
+    ],
+    [
+      162,
+      80,
+      0,
+      79,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0610764609500019,
+      "offset": [
+        1953.8491407604374,
+        32.90206176810892
+      ]
+    },
+    "frontendVersion": "1.32.9",
+    "workflowRendererVersion": "LG",
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

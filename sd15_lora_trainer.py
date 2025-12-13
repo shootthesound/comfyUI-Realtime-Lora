@@ -220,6 +220,10 @@ class SD15LoraTrainer:
                     "default": saved.get('output_name', "MyLora"),
                     "tooltip": "Custom name for the output LoRA. Timestamp will be appended."
                 }),
+                "custom_python_exe": ("STRING", {
+                    "default": saved.get('custom_python_exe', ""),
+                    "tooltip": "Advanced: Optionally enter the full path to a custom python.exe (e.g. C:\\my-venv\\Scripts\\python.exe). If empty, uses the venv inside sd_scripts_path. The sd_scripts_path field is still required for locating training scripts."
+                }),
             },
             "optional": {
                 "image_1": ("IMAGE", {"tooltip": "Training image (not needed if images_path is set)."}),
@@ -253,6 +257,7 @@ class SD15LoraTrainer:
         vram_mode,
         keep_lora=True,
         output_name="MyLora",
+        custom_python_exe="",
         image_1=None,
         **kwargs
     ):
@@ -325,11 +330,26 @@ class SD15LoraTrainer:
         print(f"[SD1.5 LoRA] Using VRAM mode: {vram_mode}")
 
         # Validate paths
-        accelerate_path = _get_accelerate_path(sd_scripts_path)
         train_script = os.path.join(sd_scripts_path, "train_network.py")
 
-        if not os.path.exists(accelerate_path):
-            raise FileNotFoundError(f"sd-scripts accelerate not found at: {accelerate_path}")
+        # Use custom python exe if provided, otherwise detect from sd_scripts_path
+        if custom_python_exe and custom_python_exe.strip():
+            custom_python = custom_python_exe.strip()
+            if not os.path.exists(custom_python):
+                raise FileNotFoundError(f"Custom python.exe not found at: {custom_python}")
+            # Derive accelerate path from same directory as custom python
+            venv_scripts_dir = os.path.dirname(custom_python)
+            if sys.platform == 'win32':
+                accelerate_path = os.path.join(venv_scripts_dir, "accelerate.exe")
+            else:
+                accelerate_path = os.path.join(venv_scripts_dir, "accelerate")
+            if not os.path.exists(accelerate_path):
+                raise FileNotFoundError(f"accelerate not found at: {accelerate_path} (expected in same directory as custom python)")
+        else:
+            accelerate_path = _get_accelerate_path(sd_scripts_path)
+            if not os.path.exists(accelerate_path):
+                raise FileNotFoundError(f"sd-scripts accelerate not found at: {accelerate_path}")
+
         if not os.path.exists(train_script):
             raise FileNotFoundError(f"train_network.py not found at: {train_script}")
         if not model_path or not os.path.exists(model_path):
@@ -347,6 +367,7 @@ class SD15LoraTrainer:
             'vram_mode': vram_mode,
             'keep_lora': keep_lora,
             'output_name': output_name,
+            'custom_python_exe': custom_python_exe,
         }
         _save_sd15_config()
 

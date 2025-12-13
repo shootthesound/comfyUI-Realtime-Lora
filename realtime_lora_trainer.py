@@ -221,6 +221,10 @@ class RealtimeLoraTrainer:
                     "default": saved.get('output_name', "MyLora"),
                     "tooltip": "Custom name for the output LoRA. Timestamp will be appended."
                 }),
+                "custom_python_exe": ("STRING", {
+                    "default": saved.get('custom_python_exe', ""),
+                    "tooltip": "Advanced: Optionally enter the full path to a custom python.exe (e.g. C:\\my-venv\\Scripts\\python.exe). If empty, uses the venv inside ai_toolkit_path. The ai_toolkit_path field is still required for locating training scripts."
+                }),
             },
             "optional": {
                 "image_1": ("IMAGE", {"tooltip": "Training image (not needed if images_path is set)."}),
@@ -254,6 +258,7 @@ class RealtimeLoraTrainer:
         vram_mode,
         keep_lora=True,
         output_name="MyLora",
+        custom_python_exe="",
         image_1=None,
         **kwargs
     ):
@@ -351,11 +356,18 @@ class RealtimeLoraTrainer:
             print(f"[Realtime LoRA] Min mode: All optimizations enabled, max_res=512")
 
         # Validate AI-Toolkit path
-        venv_python = _get_venv_python_path(ai_toolkit_path)
         run_script = os.path.join(ai_toolkit_path, "run.py")
 
-        if not os.path.exists(venv_python):
-            raise FileNotFoundError(f"AI-Toolkit venv not found. Checked .venv and venv folders in: {ai_toolkit_path}")
+        # Use custom python exe if provided, otherwise detect from ai_toolkit_path
+        if custom_python_exe and custom_python_exe.strip():
+            venv_python = custom_python_exe.strip()
+            if not os.path.exists(venv_python):
+                raise FileNotFoundError(f"Custom python.exe not found at: {venv_python}")
+        else:
+            venv_python = _get_venv_python_path(ai_toolkit_path)
+            if not os.path.exists(venv_python):
+                raise FileNotFoundError(f"AI-Toolkit venv not found. Checked .venv and venv folders in: {ai_toolkit_path}")
+
         if not os.path.exists(run_script):
             raise FileNotFoundError(f"AI-Toolkit run.py not found at: {run_script}")
 
@@ -371,6 +383,7 @@ class RealtimeLoraTrainer:
             'vram_mode': vram_mode,
             'keep_lora': keep_lora,
             'output_name': output_name,
+            'custom_python_exe': custom_python_exe,
         }
         _save_config()
 

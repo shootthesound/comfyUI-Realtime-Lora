@@ -264,6 +264,10 @@ class MusubiZImageLoraTrainer:
                     "default": saved.get('output_name', "MyLora"),
                     "tooltip": "Custom name for the output LoRA. Timestamp will be appended."
                 }),
+                "custom_python_exe": ("STRING", {
+                    "default": saved.get('custom_python_exe', ""),
+                    "tooltip": "Advanced: Optionally enter the full path to a custom python.exe (e.g. C:\\my-venv\\Scripts\\python.exe). If empty, uses the venv inside musubi_path. The musubi_path field is still required for locating training scripts."
+                }),
             },
             "optional": {
                 "image_1": ("IMAGE", {"tooltip": "Training image (not needed if images_path is set)."}),
@@ -299,6 +303,7 @@ class MusubiZImageLoraTrainer:
         vram_mode,
         keep_lora=True,
         output_name="MyLora",
+        custom_python_exe="",
         image_1=None,
         **kwargs
     ):
@@ -409,6 +414,7 @@ class MusubiZImageLoraTrainer:
             'vram_mode': vram_mode,
             'keep_lora': keep_lora,
             'output_name': output_name,
+            'custom_python_exe': custom_python_exe,
         }
         _save_musubi_config()
 
@@ -502,7 +508,13 @@ class MusubiZImageLoraTrainer:
             env = os.environ.copy()
             env['PYTHONIOENCODING'] = 'utf-8'
 
-            python_path = _get_venv_python_path(musubi_path)
+            # Use custom python exe if provided, otherwise detect from musubi_path
+            if custom_python_exe and custom_python_exe.strip():
+                python_path = custom_python_exe.strip()
+                if not os.path.exists(python_path):
+                    raise FileNotFoundError(f"Custom python.exe not found at: {python_path}")
+            else:
+                python_path = _get_venv_python_path(musubi_path)
 
             # Pre-cache latents and text encoder outputs (REQUIRED for Musubi Z-Image training)
             print(f"[Musubi Z-Image] Pre-caching latents and text encoder outputs...")

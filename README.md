@@ -5,8 +5,9 @@
 
 **Train**, **analyze**, and **selectively by Block load** LoRAs for **SDXL, SD 1.5, FLUX, Z-Image, Qwen Image, Qwen Image Edit, and Wan 2.2** directly inside ComfyUI. One unified interface across three training backends, plus powerful analysis and block-level loading tools.
 
-> **New in v1.2:** LoRA Analysis & Selective Block Loading - See which blocks matter and load only the ones you want!
-> **[▶ Watch Demo](https://www.youtube.com/watch?v=dkEB5i5yBUI)**
+> **New in v1.1:** LoRA Analysis & Selective Block Loading - See which blocks matter and load only the ones you want!
+>
+> [![▶ Watch Demo](https://img.youtube.com/vi/dkEB5i5yBUI/0.jpg)](https://www.youtube.com/watch?v=dkEB5i5yBUI)
 
 Capture a face, a style, or a subject from your reference images and apply it to new generations - all within the same workflow. No config files. No command line. Just connect images and go.
 

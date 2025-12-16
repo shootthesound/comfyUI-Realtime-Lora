@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-realtime-lora"
 description = "Train, analyze, and selectively by block load LoRAs inside ComfyUI. Supports Z-Image, Qwen Image, Qwen Image Edit, SDXL, FLUX, Wan 2.2, and SD 1.5"
-version = "1.1.3"
+version = "1.1.4"
 license = "MIT"
 authors = [
     { name = "Peter Neill" }

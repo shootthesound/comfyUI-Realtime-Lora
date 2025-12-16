@@ -2,7 +2,7 @@
   "id": "92112d97-bb64-4b44-86f2-ea5691ef8f6e",
   "revision": 0,
   "last_node_id": 98,
-  "last_link_id": 214,
+  "last_link_id": 215,
   "nodes": [
     {
       "id": 72,
@@ -780,7 +780,7 @@
           "name": "analysis_json",
           "shape": 7,
           "type": "STRING",
-          "link": null
+          "link": 215
         },
         {
           "localized_name": "lora_name",
@@ -1468,113 +1468,6 @@
         true,
         1,
         true,
-        1
-      ],
-      "ndSuperSelectorEnabled": false,
-      "ndPowerEnabled": false
-    },
-    {
-      "id": 97,
-      "type": "LoRALoaderWithAnalysis",
-      "pos": [
-        -2042.379927502348,
-        -2325.883808447013
-      ],
-      "size": [
-        432.7592415398401,
-        245.09093482656613
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 212
-        },
-        {
-          "localized_name": "clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 211
-        },
-        {
-          "localized_name": "lora_name",
-          "name": "lora_name",
-          "type": "COMBO",
-          "widget": {
-            "name": "lora_name"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "strength_model",
-          "name": "strength_model",
-          "type": "FLOAT",
-          "widget": {
-            "name": "strength_model"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "strength_clip",
-          "name": "strength_clip",
-          "type": "FLOAT",
-          "widget": {
-            "name": "strength_clip"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "localized_name": "model",
-          "name": "model",
-          "type": "MODEL",
-          "links": null
-        },
-        {
-          "localized_name": "clip",
-          "name": "clip",
-          "type": "CLIP",
-          "links": null
-        },
-        {
-          "localized_name": "analysis",
-          "name": "analysis",
-          "type": "STRING",
-          "links": [
-            214
-          ]
-        },
-        {
-          "localized_name": "analysis_json",
-          "name": "analysis_json",
-          "type": "STRING",
-          "links": []
-        },
-        {
-          "localized_name": "lora_path",
-          "name": "lora_path",
-          "type": "STRING",
-          "links": []
-        }
-      ],
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {},
-          "version": "7.5.1"
-        },
-        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
-        "ver": "3baddd9117f8c4bafb625d7160ee72a921adaacf",
-        "Node name for S&R": "LoRALoaderWithAnalysis"
-      },
-      "widgets_values": [
-        "zimage\\20s_horror_z_100.safetensors",
-        1,
         1
       ],
       "ndSuperSelectorEnabled": false,
@@ -2485,8 +2378,117 @@
         "Node name for S&R": "easy showAnything"
       },
       "widgets_values": [
-        "LoRA Patch Analysis (ZIMAGE)\n============================================================\nBlock                        Score    Patches   Strength\n------------------------------------------------------------\nother                     [████████████████████] 100.0  ( 22)    22.000\nlayer_28                  [██████████████████░░]  90.5  (  6)     6.000\nlayer_27                  [█████████████████░░░]  88.5  (  6)     6.000\nlayer_29                  [████████████████░░░░]  82.9  (  6)     6.000\nlayer_21                  [██████████████░░░░░░]  74.2  (  6)     6.000\nlayer_26                  [██████████████░░░░░░]  73.7  (  6)     6.000\nlayer_22                  [██████████████░░░░░░]  71.6  (  6)     6.000\nlayer_20                  [█████████████░░░░░░░]  68.1  (  6)     6.000\nlayer_19                  [█████████████░░░░░░░]  66.1  (  6)     6.000\nlayer_25                  [████████████░░░░░░░░]  64.9  (  6)     6.000\nlayer_24                  [████████████░░░░░░░░]  63.0  (  6)     6.000\nlayer_18                  [████████████░░░░░░░░]  60.6  (  6)     6.000\nlayer_23                  [███████████░░░░░░░░░]  60.0  (  6)     6.000\nlayer_17                  [███████████░░░░░░░░░]  58.5  (  6)     6.000\nlayer_16                  [██████████░░░░░░░░░░]  54.1  (  6)     6.000\nlayer_15                  [██████████░░░░░░░░░░]  50.6  (  6)     6.000\nlayer_14                  [█████████░░░░░░░░░░░]  48.9  (  6)     6.000\nlayer_13                  [████████░░░░░░░░░░░░]  42.2  (  6)     6.000\nlayer_12                  [████████░░░░░░░░░░░░]  42.0  (  6)     6.000\nlayer_11                  [████████░░░░░░░░░░░░]  40.7  (  6)     6.000\nlayer_10                  [███████░░░░░░░░░░░░░]  38.1  (  6)     6.000\nlayer_9                   [███████░░░░░░░░░░░░░]  37.6  (  6)     6.000\nlayer_7                   [███████░░░░░░░░░░░░░]  35.8  (  6)     6.000\nlayer_8                   [██████░░░░░░░░░░░░░░]  34.5  (  6)     6.000\nlayer_2                   [██████░░░░░░░░░░░░░░]  34.4  (  6)     6.000\nlayer_6                   [██████░░░░░░░░░░░░░░]  34.3  (  6)     6.000\nlayer_5                   [██████░░░░░░░░░░░░░░]  33.3  (  6)     6.000\nlayer_4                   [██████░░░░░░░░░░░░░░]  33.1  (  6)     6.000\nlayer_1                   [██████░░░░░░░░░░░░░░]  32.9  (  6)     6.000\nlayer_3                   [██████░░░░░░░░░░░░░░]  32.0  (  6)     6.000\nlayer_0                   [█████░░░░░░░░░░░░░░░]  27.4  (  6)     6.000\n------------------------------------------------------------\nTotal patched layers: 202"
+        "LoRA Patch Analysis (ZIMAGE)\n============================================================\nBlock                        Score    Patches   Strength\n------------------------------------------------------------\nlayer_22                  [████████████████████] 100.0  (  8)     8.000\nlayer_21                  [███████████████████░]  98.6  (  8)     8.000\nlayer_20                  [███████████████████░]  96.1  (  8)     8.000\nlayer_23                  [██████████████████░░]  93.7  (  8)     8.000\nlayer_24                  [████████████████░░░░]  84.9  (  8)     8.000\nlayer_19                  [████████████████░░░░]  84.6  (  8)     8.000\nlayer_15                  [███████████████░░░░░]  78.5  (  8)     8.000\nlayer_18                  [███████████████░░░░░]  78.4  (  8)     8.000\nlayer_16                  [███████████████░░░░░]  78.0  (  8)     8.000\nlayer_17                  [███████████████░░░░░]  75.2  (  8)     8.000\nlayer_25                  [██████████████░░░░░░]  74.0  (  8)     8.000\nlayer_13                  [██████████████░░░░░░]  71.3  (  8)     8.000\nlayer_14                  [██████████████░░░░░░]  70.7  (  8)     8.000\nlayer_27                  [█████████████░░░░░░░]  67.4  (  8)     8.000\nlayer_26                  [█████████████░░░░░░░]  66.3  (  8)     8.000\nlayer_28                  [█████████████░░░░░░░]  65.7  (  8)     8.000\nlayer_9                   [████████████░░░░░░░░]  63.3  (  8)     8.000\nlayer_11                  [████████████░░░░░░░░]  62.1  (  8)     8.000\nlayer_29                  [███████████░░░░░░░░░]  60.0  (  8)     8.000\nlayer_12                  [███████████░░░░░░░░░]  59.4  (  8)     8.000\nlayer_8                   [███████████░░░░░░░░░]  55.5  (  8)     8.000\nlayer_10                  [██████████░░░░░░░░░░]  50.7  (  8)     8.000\nlayer_5                   [█████████░░░░░░░░░░░]  48.4  (  8)     8.000\nlayer_6                   [████████░░░░░░░░░░░░]  44.6  (  8)     8.000\nlayer_7                   [████████░░░░░░░░░░░░]  40.3  (  8)     8.000\nlayer_3                   [███████░░░░░░░░░░░░░]  35.5  (  8)     8.000\nlayer_4                   [██████░░░░░░░░░░░░░░]  34.6  (  8)     8.000\nlayer_2                   [██████░░░░░░░░░░░░░░]  31.1  (  8)     8.000\nlayer_1                   [████░░░░░░░░░░░░░░░░]  22.3  (  8)     8.000\nlayer_0                   [████░░░░░░░░░░░░░░░░]  20.1  (  8)     8.000\n------------------------------------------------------------\nTotal patched layers: 240"
       ]
+    },
+    {
+      "id": 97,
+      "type": "LoRALoaderWithAnalysis",
+      "pos": [
+        -2042.379927502348,
+        -2325.883808447013
+      ],
+      "size": [
+        432.7592415398401,
+        245.09093482656613
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 212
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 211
+        },
+        {
+          "localized_name": "lora_name",
+          "name": "lora_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_model",
+          "name": "strength_model",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "strength_clip",
+          "name": "strength_clip",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_clip"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": null
+        },
+        {
+          "localized_name": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "localized_name": "analysis",
+          "name": "analysis",
+          "type": "STRING",
+          "links": [
+            214
+          ]
+        },
+        {
+          "localized_name": "analysis_json",
+          "name": "analysis_json",
+          "type": "STRING",
+          "links": [
+            215
+          ]
+        },
+        {
+          "localized_name": "lora_path",
+          "name": "lora_path",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.1"
+        },
+        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
+        "ver": "3baddd9117f8c4bafb625d7160ee72a921adaacf",
+        "Node name for S&R": "LoRALoaderWithAnalysis"
+      },
+      "widgets_values": [
+        "zimage\\GlaraH.safetensors",
+        1,
+        1
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
     }
   ],
   "links": [
@@ -2657,16 +2659,24 @@
       98,
       0,
       "STRING"
+    ],
+    [
+      215,
+      97,
+      3,
+      96,
+      3,
+      "STRING"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6588450000000011,
+      "scale": 0.7247295000000019,
       "offset": [
-        4257.561943268462,
-        2589.1463140777996
+        3981.5601076233856,
+        2506.5870956791473
       ]
     },
     "frontendVersion": "1.34.8",

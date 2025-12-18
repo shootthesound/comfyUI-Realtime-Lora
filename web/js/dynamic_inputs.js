@@ -267,26 +267,44 @@ app.registerExtension({
 
             const node = this;
 
-            // Sanitize strength widget values during restoration (only if corrupt)
-            // ComfyUI deserializes as strings, but parseFloat handles this correctly
+            // Restore widget values from saved workflow
             setTimeout(() => {
                 const config = SELECTIVE_LOADER_PRESETS[nodeData.name];
                 if (!config) return;
 
+                // Restore all toggle and strength values from info.widgets_values if available
+                if (info && info.widgets_values) {
+                    for (let i = 0; i < node.widgets.length && i < info.widgets_values.length; i++) {
+                        const widget = node.widgets[i];
+                        const savedValue = info.widgets_values[i];
+
+                        // Restore the value
+                        if (widget.name.endsWith('_str')) {
+                            // Strength widget - ensure numeric
+                            let val = parseFloat(savedValue);
+                            if (isNaN(val)) {
+                                val = 1.0; // Fallback for corrupt data
+                            }
+                            widget.value = val;
+                        } else if (widget.type === 'toggle' || typeof widget.value === 'boolean') {
+                            // Boolean toggle widget
+                            widget.value = Boolean(savedValue);
+                        } else {
+                            // Other widgets (preset, etc.)
+                            widget.value = savedValue;
+                        }
+                    }
+                }
+
+                // Sanitize strength widget values during restoration (only if corrupt)
                 for (const blockName of config.blocks) {
                     const strWidget = node.widgets.find(w => w.name === blockName + "_str");
                     if (strWidget) {
-                        // Only fix truly corrupt values (non-numeric strings)
-                        // Preserve valid numbers including 0.0, negatives, etc.
                         let val = parseFloat(strWidget.value);
                         if (isNaN(val)) {
-                            // Value is corrupt (e.g., "Custom" from old workflows)
-                            // Only NOW do we default to 1.0
                             val = 1.0;
                             strWidget.value = val;
                         }
-                        // If val is a valid number (including 0.0), keep the original value
-                        // Don't overwrite it
                     }
                 }
 
@@ -516,6 +534,12 @@ app.registerExtension({
                         newStrength = Math.round(newStrength / info.step) * info.step;
                         newStrength = Math.max(info.min, Math.min(info.max, newStrength));
                         strength.value = newStrength;
+
+                        // Force Python preset to "Custom" when manually changing strength
+                        if (node._pythonPresetWidget) {
+                            node._pythonPresetWidget.value = "Custom";
+                        }
+
                         node.setDirtyCanvas(true);
                         return true;
                     }
@@ -523,7 +547,12 @@ app.registerExtension({
 
                 // Let default behavior handle toggle clicks
                 if (originalMouse) {
-                    return originalMouse(event, pos, node);
+                    const result = originalMouse(event, pos, node);
+                    // Force Python preset to "Custom" when manually toggling blocks
+                    if (event.type === "pointerdown" && node._pythonPresetWidget) {
+                        node._pythonPresetWidget.value = "Custom";
+                    }
+                    return result;
                 }
                 return false;
             };
@@ -607,6 +636,11 @@ app.registerExtension({
                 if (strWidget) {
                     strWidget.value = strength;
                 }
+            }
+
+            // Force Python preset to "Custom" so it reads individual toggles
+            if (this._pythonPresetWidget) {
+                this._pythonPresetWidget.value = "Custom";
             }
 
             this.setDirtyCanvas(true);

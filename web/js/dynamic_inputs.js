@@ -248,6 +248,14 @@ app.registerExtension({
 
                 node.combineBlockWidgets();
                 node.addPresetWidget(nodeData.name);
+                node.setupBidirectionalSync(nodeData.name);
+
+                // Populate string on first creation
+                setTimeout(() => {
+                    if (node.updateStringFromUI) {
+                        node.updateStringFromUI();
+                    }
+                }, 150);
 
                 // Double the default width for better slider usability
                 const minWidth = 500;
@@ -312,6 +320,11 @@ app.registerExtension({
                 // the existing Python preset widget directly. ComfyUI will restore its
                 // saved value correctly.
 
+                // Update string from restored UI values (for copy/paste or workflow load)
+                if (node.updateStringFromUI) {
+                    node.updateStringFromUI();
+                }
+
                 node.setDirtyCanvas(true);
             }, 150); // Longer delay to ensure ComfyUI finishes deserializing first
         };
@@ -334,6 +347,19 @@ app.registerExtension({
                     // Silent fail - analysis coloring is optional
                 }
             }
+        };
+
+        // Hook onMouseUp to trigger sync after slider interaction completes
+        const origOnMouseUp = nodeType.prototype.onMouseUp;
+        nodeType.prototype.onMouseUp = function(e, localPos, graphCanvas) {
+            const result = origOnMouseUp ? origOnMouseUp.apply(this, arguments) : false;
+
+            // Trigger UI→Text sync after any mouse interaction that might have changed sliders
+            if (this.updateStringFromUI) {
+                this.updateStringFromUI();
+            }
+
+            return result;
         };
 
         nodeType.prototype.combineBlockWidgets = function() {
@@ -643,7 +669,148 @@ app.registerExtension({
                 this._pythonPresetWidget.value = "Custom";
             }
 
+            // Trigger bidirectional sync to update string
+            if (this.updateStringFromUI) {
+                this.updateStringFromUI();
+            }
+
             this.setDirtyCanvas(true);
+        };
+
+        // Bidirectional sync between block_weights_string and UI sliders
+        nodeType.prototype.setupBidirectionalSync = function(nodeName) {
+            const node = this;
+            const config = SELECTIVE_LOADER_PRESETS[nodeName];
+            if (!config) return;
+
+            const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+            if (!stringWidget) return;
+
+            // Track last known string value
+            node._lastStringValue = stringWidget.value || "";
+
+            // Text → UI sync: Parse string and update sliders when text changes
+            node.parseStringToUI = function() {
+                const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+                if (!stringWidget || !stringWidget.value.trim() || stringWidget._updating) return;
+
+                const input = stringWidget.value.trim();
+
+                // Support both formats:
+                // 1. Named format: "%default=1.0, te1=0.5, in7-8=1.2"
+                // 2. Positional format: "1.0, 0.0, 1.5, ..." (comma-separated numbers)
+
+                if (input.startsWith('%')) {
+                    // Named format - not implemented yet for UI sync (Python handles it)
+                    return;
+                }
+
+                // Positional format: comma-separated numbers
+                const values = input.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                const blocks = config.blocks;
+
+                if (values.length !== blocks.length) {
+                    console.warn(`Block weights string has ${values.length} values but expected ${blocks.length}`);
+                    return;
+                }
+
+                // Update UI sliders from string values
+                for (let i = 0; i < blocks.length && i < values.length; i++) {
+                    const blockName = blocks[i];
+                    const value = values[i];
+
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && strWidget) {
+                        toggleWidget.value = value !== 0;
+                        strWidget.value = value !== 0 ? value : 1.0;
+                    }
+                }
+
+                node.setDirtyCanvas(true);
+            };
+
+            // UI → Text sync: Update string when sliders change
+            node.updateStringFromUI = function() {
+                const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+                if (!stringWidget || stringWidget._updating) return;
+
+                const blocks = config.blocks;
+                const values = [];
+
+                for (const blockName of blocks) {
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && strWidget) {
+                        // If enabled, use strength value; if disabled, use 0
+                        values.push(toggleWidget.value ? strWidget.value.toFixed(2) : "0.00");
+                    } else {
+                        values.push("1.00"); // Default fallback
+                    }
+                }
+
+                // Set flag to prevent infinite loop
+                stringWidget._updating = true;
+                stringWidget.value = values.join(", ");
+                stringWidget._updating = false;
+            };
+
+            // Add method to check for text changes (called on various interactions)
+            node.checkAndSyncTextChanges = function() {
+                const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+                if (!stringWidget) return;
+
+                // Check if string widget text changed
+                if (stringWidget.value !== node._lastStringValue && !stringWidget._updating) {
+                    node._lastStringValue = stringWidget.value;
+                    node.parseStringToUI();
+                }
+            };
+
+            // Check on mouse interactions with node (text → UI sync)
+            const origOnMouseDown = node.onMouseDown;
+            node.onMouseDown = function(e, pos, canvas) {
+                // Check if text changed and sync to UI
+                setTimeout(() => node.checkAndSyncTextChanges(), 10);
+                if (origOnMouseDown) {
+                    return origOnMouseDown.apply(this, arguments);
+                }
+            };
+
+            // Whenever a slider changes, update the string
+            // Use setTimeout to ensure widgets are fully initialized
+            setTimeout(() => {
+                for (const blockName of config.blocks) {
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && strWidget) {
+                        // Store reference to node for closure
+                        const nodeRef = node;
+
+                        // Wrap original callbacks
+                        const origToggleCallback = toggleWidget.callback;
+                        toggleWidget.callback = function(value) {
+                            if (origToggleCallback) origToggleCallback.call(this, value);
+                            // Update string after toggle changes
+                            if (nodeRef.updateStringFromUI) {
+                                nodeRef.updateStringFromUI();
+                            }
+                        };
+
+                        const origStrCallback = strWidget.callback;
+                        strWidget.callback = function(value) {
+                            if (origStrCallback) origStrCallback.call(this, value);
+                            // Update string after strength changes
+                            if (nodeRef.updateStringFromUI) {
+                                nodeRef.updateStringFromUI();
+                            }
+                        };
+                    }
+                }
+            }, 200);
         };
     }
 });

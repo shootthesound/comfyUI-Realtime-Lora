@@ -400,12 +400,20 @@ app.registerExtension({
         nodeType.prototype.createCombinedWidget = function(pair) {
             const { toggle, strength, name } = pair;
 
+            // Change toggle type to "custom" to prevent LiteGraph's built-in toggle click handling
+            // This allows our mouse handler to receive pointerdown events
+            toggle.type = "custom";
+
             // Hide original widgets by replacing their draw methods
             const originalToggleDraw = toggle.draw?.bind(toggle);
             const originalStrengthDraw = strength.draw?.bind(strength);
 
             // Combined draw function for toggle widget (strength widget will be hidden)
             toggle.draw = function(ctx, node, widgetWidth, y, widgetHeight) {
+                // Store Y position for mouse handling
+                toggle._lastDrawY = y;
+                toggle._lastDrawHeight = widgetHeight;
+
                 const margin = 10;
                 const checkboxSize = 14;
                 const labelWidth = 95; // Fixed label width
@@ -542,17 +550,40 @@ app.registerExtension({
                 }
             };
 
-            // Mouse handling for slider - simple version that works
+            // Mouse handling for slider
+            // NOTE: LiteGraph doesn't send pointerdown to widget.mouse - only pointermove and pointerup
+            // So we handle: pointermove for dragging, pointerup for click detection
             const originalMouse = toggle.mouse?.bind(toggle);
             toggle.mouse = function(event, pos, node) {
                 const widgetWidth = node.size[0];
                 const info = toggle.sliderInfo;
                 const layout = info.getLayout(widgetWidth);
                 const localX = pos[0];
+                const absoluteY = pos[1];
 
-                // Slider interaction - click OR drag on slider area
-                if (localX >= layout.sliderX - 5 && localX <= layout.sliderX + layout.sliderWidth + 5) {
-                    if (event.type === "pointerdown" || event.type === "pointermove") {
+                // Convert absolute Y to widget-relative Y using stored draw position
+                if (!toggle._lastDrawY || !toggle._lastDrawHeight) {
+                    // Fallback if draw hasn't happened yet
+                    return originalMouse ? originalMouse(event, pos, node) : false;
+                }
+
+                const widgetY = toggle._lastDrawY;
+                const widgetHeight = toggle._lastDrawHeight;
+                const localY = absoluteY - widgetY;
+                const trackCenterY = widgetHeight / 2;
+                const verticalTolerance = 4;
+
+                // Check if in slider area (X: within slider bounds, Y: near track)
+                const inSliderX = localX >= layout.sliderX && localX <= layout.sliderX + layout.sliderWidth;
+                const inSliderY = Math.abs(localY - trackCenterY) <= verticalTolerance;
+
+                // Handle pointermove: continue drag if already dragging, or start if in slider area
+                if (event.type === "pointermove") {
+                    if (toggle._wasDragging || (inSliderX && inSliderY)) {
+                        // Track that we're dragging (moved since mousedown)
+                        toggle._wasDragging = true;
+
+                        // Dragging: adjust slider value
                         let normalized = (localX - layout.sliderX) / layout.sliderWidth;
                         normalized = Math.max(0, Math.min(1, normalized));
                         let newStrength = info.min + normalized * (info.max - info.min);
@@ -563,19 +594,52 @@ app.registerExtension({
                         if (node._pythonPresetWidget) {
                             node._pythonPresetWidget.value = "Custom";
                         }
-
                         node.setDirtyCanvas(true);
                         return true;
                     }
                 }
 
-                // Let default behavior handle toggle clicks
-                if (originalMouse) {
-                    const result = originalMouse(event, pos, node);
-                    if (event.type === "pointerdown" && node._pythonPresetWidget) {
-                        node._pythonPresetWidget.value = "Custom";
+                if (inSliderX && inSliderY) {
+                    if (event.type === "pointerup") {
+                        // pointerup without prior pointermove = click
+                        if (!toggle._wasDragging) {
+                            // Calculate current handle position
+                            let strengthVal = parseFloat(strength.value);
+                            if (isNaN(strengthVal)) strengthVal = 1.0;
+                            const range = info.max - info.min;
+                            const normalizedStrength = (strengthVal - info.min) / range;
+                            const handleX = layout.sliderX + normalizedStrength * layout.sliderWidth;
+                            const handleRadius = 6;
+
+                            const distanceToHandle = Math.abs(localX - handleX);
+
+                            // LiteGraph already toggled the value on click, so:
+                            // - Click on handle: keep the toggle (do nothing)
+                            // - Click on track: undo toggle and jump to position
+                            if (distanceToHandle > handleRadius) {
+                                // Click on track → undo LiteGraph's toggle, then jump
+                                toggle.value = !toggle.value; // Undo the toggle
+                                let normalized = (localX - layout.sliderX) / layout.sliderWidth;
+                                normalized = Math.max(0, Math.min(1, normalized));
+                                let newStrength = info.min + normalized * (info.max - info.min);
+                                newStrength = Math.round(newStrength / info.step) * info.step;
+                                newStrength = Math.max(info.min, Math.min(info.max, newStrength));
+                                strength.value = newStrength;
+
+                                if (node._pythonPresetWidget) {
+                                    node._pythonPresetWidget.value = "Custom";
+                                }
+                                node.setDirtyCanvas(true);
+                            }
+                        }
+                        toggle._wasDragging = false;
+                        return true;
                     }
-                    return result;
+                }
+
+                // Let default behavior handle other areas
+                if (originalMouse) {
+                    return originalMouse(event, pos, node);
                 }
                 return false;
             };
@@ -771,6 +835,7 @@ app.registerExtension({
             node.onMouseDown = function(e, pos, canvas) {
                 // Check if text changed and sync to UI before processing interaction
                 node.checkAndSyncTextChanges();
+
                 if (origOnMouseDown) {
                     return origOnMouseDown.apply(this, arguments);
                 }

@@ -464,10 +464,11 @@ app.registerExtension({
                 ctx.lineWidth = 1.5;
                 ctx.strokeRect(checkboxX, y + (widgetHeight - checkboxSize) / 2, checkboxSize, checkboxSize);
 
-                if (enabled) {
-                    ctx.fillStyle = checkboxColor;
-                    ctx.fillRect(checkboxX + 2, y + (widgetHeight - checkboxSize) / 2 + 2, checkboxSize - 4, checkboxSize - 4);
-                }
+                // Always show impact color, but dimmed when disabled
+                ctx.globalAlpha = enabled ? 1.0 : 0.35;
+                ctx.fillStyle = checkboxColor;
+                ctx.fillRect(checkboxX + 2, y + (widgetHeight - checkboxSize) / 2 + 2, checkboxSize - 4, checkboxSize - 4);
+                ctx.globalAlpha = 1.0;
 
                 // Label
                 ctx.fillStyle = enabled ? "#ddd" : "#666";

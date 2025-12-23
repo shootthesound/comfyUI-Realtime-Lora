@@ -398,6 +398,71 @@ const SELECTIVE_LOADER_PRESETS = {
             "Evens Only": { enabled: Array.from({length: 30}, (_, i) => `block_${i * 2}`), strength: 1.0 },
             "Odds Only": { enabled: Array.from({length: 30}, (_, i) => `block_${i * 2 + 1}`), strength: 1.0 },
         }
+    },
+    // Model Layer Editor nodes (base model per-block control)
+    "SDXLModelLayerEditor": {
+        blocks: [...Array.from({length: 12}, (_, i) => `input_${i}`), "mid", ...Array.from({length: 12}, (_, i) => `output_${i}`), "other"],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Outputs Only": { enabled: [...Array.from({length: 12}, (_, i) => `output_${i}`), "mid", "other"], strength: 1.0 },
+            "Inputs Only": { enabled: [...Array.from({length: 12}, (_, i) => `input_${i}`), "mid", "other"], strength: 1.0 },
+            "Custom": { enabled: "ALL", strength: 1.0 },
+        }
+    },
+    "SD15ModelLayerEditor": {
+        blocks: [...Array.from({length: 12}, (_, i) => `input_${i}`), "mid", ...Array.from({length: 12}, (_, i) => `output_${i}`), "other"],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Outputs Only": { enabled: [...Array.from({length: 12}, (_, i) => `output_${i}`), "mid", "other"], strength: 1.0 },
+            "Inputs Only": { enabled: [...Array.from({length: 12}, (_, i) => `input_${i}`), "mid", "other"], strength: 1.0 },
+            "Custom": { enabled: "ALL", strength: 1.0 },
+        }
+    },
+    "FLUXModelLayerEditor": {
+        blocks: [...Array.from({length: 19}, (_, i) => `double_${i}`), ...Array.from({length: 38}, (_, i) => `single_${i}`), "other"],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Double Only": { enabled: [...Array.from({length: 19}, (_, i) => `double_${i}`), "other"], strength: 1.0 },
+            "Single Only": { enabled: [...Array.from({length: 38}, (_, i) => `single_${i}`), "other"], strength: 1.0 },
+            "Custom": { enabled: "ALL", strength: 1.0 },
+        }
+    },
+    "ZImageModelLayerEditor": {
+        blocks: [...Array.from({length: 30}, (_, i) => `layer_${i}`), "other"],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Late Only (20-29)": { enabled: [...Array.from({length: 10}, (_, i) => `layer_${i + 20}`), "other"], strength: 1.0 },
+            "Mid-Late (15-29)": { enabled: [...Array.from({length: 15}, (_, i) => `layer_${i + 15}`), "other"], strength: 1.0 },
+            "Custom": { enabled: "ALL", strength: 1.0 },
+        }
+    },
+    "WanModelLayerEditor": {
+        blocks: [...Array.from({length: 40}, (_, i) => `block_${i}`), "other"],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Late Only (30-39)": { enabled: [...Array.from({length: 10}, (_, i) => `block_${i + 30}`), "other"], strength: 1.0 },
+            "Custom": { enabled: "ALL", strength: 1.0 },
+        }
+    },
+    "QwenModelLayerEditor": {
+        blocks: [...Array.from({length: 60}, (_, i) => `block_${i}`), "other"],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Late Only (45-59)": { enabled: [...Array.from({length: 15}, (_, i) => `block_${i + 45}`), "other"], strength: 1.0 },
+            "Custom": { enabled: "ALL", strength: 1.0 },
+        }
     }
 };
 
@@ -418,7 +483,14 @@ app.registerExtension({
             "SDXLAnalyzerSelectiveLoaderV2",
             "FLUXAnalyzerSelectiveLoaderV2",
             "WanAnalyzerSelectiveLoaderV2",
-            "QwenAnalyzerSelectiveLoaderV2"
+            "QwenAnalyzerSelectiveLoaderV2",
+            // Model Layer Editor nodes (base model per-block control)
+            "SDXLModelLayerEditor",
+            "SD15ModelLayerEditor",
+            "FLUXModelLayerEditor",
+            "ZImageModelLayerEditor",
+            "WanModelLayerEditor",
+            "QwenModelLayerEditor"
         ];
 
         if (!selectiveLoaders.includes(nodeData.name)) {
@@ -490,11 +562,54 @@ app.registerExtension({
                 // the existing Python preset widget directly. ComfyUI will restore its
                 // saved value correctly.
 
+                // Merge workflow-embedded presets into localStorage (for Model Layer Editor)
+                // This ensures old workflow presets appear in dropdown immediately on load
+                if (nodeData.name.includes("ModelLayerEditor")) {
+                    const browserPresetsWidget = node.widgets.find(w => w.name === "browser_presets_json");
+                    if (browserPresetsWidget && browserPresetsWidget.value && browserPresetsWidget.value !== "{}") {
+                        try {
+                            const workflowPresets = JSON.parse(browserPresetsWidget.value);
+                            if (workflowPresets && typeof workflowPresets === 'object') {
+                                const localPresets = node.loadUserPresets ? node.loadUserPresets(nodeData.name) : {};
+                                let merged = false;
+                                for (const [name, data] of Object.entries(workflowPresets)) {
+                                    if (name && !localPresets[name] && name.toLowerCase() !== 'true' && name.toLowerCase() !== 'false') {
+                                        localPresets[name] = data;
+                                        merged = true;
+                                    }
+                                }
+                                if (merged && node.saveUserPreset) {
+                                    // Save merged presets to localStorage
+                                    const storageKey = `comfyui_model_layer_presets_${nodeData.name}`;
+                                    localStorage.setItem(storageKey, JSON.stringify(localPresets));
+                                    console.log(`[Model Layer Editor] Merged workflow presets into browser storage`);
+                                    // Refresh dropdown to include new presets
+                                    const presetWidget = node.widgets.find(w => w.name === "preset");
+                                    if (presetWidget && presetWidget.options) {
+                                        for (const name of Object.keys(localPresets)) {
+                                            if (!presetWidget.options.values.includes(name)) {
+                                                const customIdx = presetWidget.options.values.indexOf("Custom");
+                                                if (customIdx >= 0) {
+                                                    presetWidget.options.values.splice(customIdx, 0, name);
+                                                } else {
+                                                    presetWidget.options.values.push(name);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // Silent fail - workflow preset merge is optional
+                        }
+                    }
+                }
+
                 node.setDirtyCanvas(true);
             }, 150); // Longer delay to ensure ComfyUI finishes deserializing first
         };
 
-        // Hook onExecuted to store analysis data when we receive it
+        // Hook onExecuted to store analysis data and sync user presets
         const origOnExecuted = nodeType.prototype.onExecuted;
         nodeType.prototype.onExecuted = function(output) {
             if (origOnExecuted) {
@@ -505,8 +620,54 @@ app.registerExtension({
                 try {
                     const jsonStr = output.analysis_json[0];
                     if (jsonStr && jsonStr.length > 2) {  // Not empty "{}"
-                        this._analysisData = JSON.parse(jsonStr);
+                        const analysisData = JSON.parse(jsonStr);
+                        this._analysisData = analysisData;
                         this.setDirtyCanvas(true);
+
+                        // Sync ALL user presets from Python config file to localStorage
+                        // This handles new computer / cleared storage scenarios
+                        if (analysisData.user_presets) {
+                            const { node_id, presets } = analysisData.user_presets;
+                            const storageKey = `comfyui_model_layer_presets_${node_id}`;
+                            try {
+                                localStorage.setItem(storageKey, JSON.stringify(presets));
+                                const count = Object.keys(presets).length;
+                                if (count > 0) {
+                                    console.log(`[Model Layer Editor] Synced ${count} user preset(s) to browser storage`);
+                                }
+                            } catch (e) {
+                                console.warn("[Model Layer Editor] Failed to sync presets:", e);
+                            }
+                        }
+
+                        // Handle deleted preset - remove from localStorage
+                        if (analysisData.deleted_preset) {
+                            const { node_id, preset_name } = analysisData.deleted_preset;
+                            const storageKey = `comfyui_model_layer_presets_${node_id}`;
+                            try {
+                                const storedPresets = JSON.parse(localStorage.getItem(storageKey) || "{}");
+                                if (storedPresets[preset_name]) {
+                                    delete storedPresets[preset_name];
+                                    localStorage.setItem(storageKey, JSON.stringify(storedPresets));
+                                    console.log(`[Model Layer Editor] Deleted preset '${preset_name}' from browser storage`);
+                                }
+                            } catch (e) {
+                                // Ignore errors
+                            }
+                        }
+
+                        // Log confirmation for just-saved preset
+                        if (analysisData.saved_preset) {
+                            const { preset_name } = analysisData.saved_preset;
+                            console.log(`[Model Layer Editor] Saved preset '${preset_name}' - available after restart`);
+                        }
+
+                        // CRITICAL: Clear the hidden save/delete fields after processing
+                        // This prevents accidental re-saves on subsequent executions
+                        const saveNameWidget = this.widgets?.find(w => w.name === "save_preset_name");
+                        const deleteNameWidget = this.widgets?.find(w => w.name === "delete_preset_name");
+                        if (saveNameWidget) saveNameWidget.value = "";
+                        if (deleteNameWidget) deleteNameWidget.value = "";
                     }
                 } catch (e) {
                     // Silent fail - analysis coloring is optional
@@ -735,7 +896,25 @@ app.registerExtension({
             const config = SELECTIVE_LOADER_PRESETS[nodeName];
             if (!config) return;
 
+            // Start with hardcoded presets
             const presetNames = Object.keys(config.presets);
+
+            // Add user presets from localStorage (for Model Layer Editor nodes)
+            if (nodeName.includes("ModelLayerEditor")) {
+                const userPresets = this.loadUserPresets(nodeName);
+                for (const name of Object.keys(userPresets)) {
+                    if (!presetNames.includes(name)) {
+                        // Insert before "Custom" if present, otherwise at end
+                        const customIdx = presetNames.indexOf("Custom");
+                        if (customIdx >= 0) {
+                            presetNames.splice(customIdx, 0, name);
+                        } else {
+                            presetNames.push(name);
+                        }
+                    }
+                }
+            }
+
             const node = this;
 
             // Find the Python preset widget and convert it to our JS preset widget
@@ -743,12 +922,35 @@ app.registerExtension({
             const presetWidget = this.widgets.find(w => w.name === "preset");
             if (!presetWidget) return;
 
+            // IMPORTANT: Start with Python's preset values (includes file-saved user presets)
+            // Then merge with our JS presets + localStorage presets
+            const pythonPresets = presetWidget.options?.values || [];
+            const allPresetNames = [...presetNames];
+
+            // Add any Python presets not already in our list (these are file-saved user presets)
+            const addedFromPython = [];
+            for (const name of pythonPresets) {
+                if (!allPresetNames.includes(name)) {
+                    addedFromPython.push(name);
+                    // Insert before "Custom" if present
+                    const customIdx = allPresetNames.indexOf("Custom");
+                    if (customIdx >= 0) {
+                        allPresetNames.splice(customIdx, 0, name);
+                    } else {
+                        allPresetNames.push(name);
+                    }
+                }
+            }
+            if (addedFromPython.length > 0) {
+                console.log(`[Model Layer Editor] Added ${addedFromPython.length} preset(s) from Python config file: ${addedFromPython.join(", ")}`);
+            }
+
             // Convert the existing combo widget to work with our JS preset system
             presetWidget.options = presetWidget.options || {};
-            presetWidget.options.values = presetNames;
+            presetWidget.options.values = allPresetNames;
 
             // Set initial value to "Default" (or current value if it's valid)
-            if (!presetNames.includes(presetWidget.value)) {
+            if (!allPresetNames.includes(presetWidget.value)) {
                 presetWidget.value = "Default";
             }
 
@@ -775,9 +977,183 @@ app.registerExtension({
             // Store reference for later
             this.presetWidget = presetWidget;
 
+            // Add Save Preset button for Model Layer Editor nodes
+            if (nodeName.includes("ModelLayerEditor")) {
+                this.addSavePresetButton(nodeName);
+            }
+
             // Resize node
             this.setSize(this.computeSize());
             this.setDirtyCanvas(true);
+        };
+
+        // ============================================================================
+        // USER PRESET SYSTEM
+        // ============================================================================
+        // Save/delete user presets with dual persistence (localStorage + file)
+        // Preset system: localStorage for instant UI updates, Python config file for persistence
+
+        // Add Save Preset button for Model Layer Editor nodes
+        nodeType.prototype.addSavePresetButton = function(nodeName) {
+            const node = this;
+            const config = SELECTIVE_LOADER_PRESETS[nodeName];
+            if (!config) return;
+
+            // Find and HIDE the save_preset_name, delete_preset_name, and browser_presets_json widgets
+            // They're still used internally for Python sync, but hidden from UI
+            const saveNameWidget = this.widgets.find(w => w.name === "save_preset_name");
+            const deleteNameWidget = this.widgets.find(w => w.name === "delete_preset_name");
+            const browserPresetsWidget = this.widgets.find(w => w.name === "browser_presets_json");
+
+            if (saveNameWidget) {
+                saveNameWidget.draw = function() {};
+                saveNameWidget.computeSize = function() { return [0, -4]; };
+            }
+            if (deleteNameWidget) {
+                deleteNameWidget.draw = function() {};
+                deleteNameWidget.computeSize = function() { return [0, -4]; };
+            }
+            if (browserPresetsWidget) {
+                browserPresetsWidget.draw = function() {};
+                browserPresetsWidget.computeSize = function() { return [0, -4]; };
+                // Override serializeValue to send all localStorage presets to Python
+                const nodeNameCopy = nodeName;  // Capture for closure
+                browserPresetsWidget.serializeValue = function() {
+                    try {
+                        const storageKey = `comfyui_model_layer_presets_${nodeNameCopy}`;
+                        const saved = localStorage.getItem(storageKey);
+                        const presets = saved ? JSON.parse(saved) : {};
+                        const json = JSON.stringify(presets);
+                        console.log(`[Model Layer Editor] Serializing ${Object.keys(presets).length} preset(s) for sync`);
+                        return json;
+                    } catch (e) {
+                        console.warn("[Model Layer Editor] Failed to serialize presets:", e);
+                        return "{}";
+                    }
+                };
+                // Also set the value directly so it's available immediately
+                browserPresetsWidget.value = browserPresetsWidget.serializeValue();
+            } else {
+                console.warn("[Model Layer Editor] browser_presets_json widget not found!");
+            }
+
+            // Add the save button - uses prompt() for name input
+            const saveButton = this.addWidget("button", "💾 Save Preset", null, () => {
+                // Prompt for preset name
+                const presetName = prompt("Enter preset name:")?.trim();
+
+                if (!presetName) {
+                    return;  // User cancelled or empty name
+                }
+
+                // Gather current values from widgets
+                const enabledBlocks = [];
+                const overrides = {};
+
+                for (const blockName of config.blocks) {
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && toggleWidget.value) {
+                        enabledBlocks.push(blockName);
+                    }
+                    if (strWidget && strWidget.value !== 1.0) {
+                        overrides[blockName] = strWidget.value;
+                    }
+                }
+
+                // Build preset data
+                const preset = {
+                    enabled: enabledBlocks.length === config.blocks.length ? "ALL" : enabledBlocks,
+                    strength: 1.0,
+                    overrides: overrides
+                };
+
+                // Save to localStorage
+                node.saveUserPreset(nodeName, presetName, preset);
+
+                // Update browser_presets_json widget value for Python sync
+                const browserPresetsWidgetSave = node.widgets.find(w => w.name === "browser_presets_json");
+                if (browserPresetsWidgetSave) {
+                    const allPresets = node.loadUserPresets(nodeName);
+                    browserPresetsWidgetSave.value = JSON.stringify(allPresets);
+                    console.log(`[Model Layer Editor] Updated sync widget: ${Object.keys(allPresets).length} presets`);
+                }
+
+                // Update preset dropdown to include the new preset
+                const presetWidget = node.widgets.find(w => w.name === "preset");
+                if (presetWidget && presetWidget.options && presetWidget.options.values) {
+                    if (!presetWidget.options.values.includes(presetName)) {
+                        // Insert before "Custom" if it exists, otherwise at end
+                        const customIdx = presetWidget.options.values.indexOf("Custom");
+                        if (customIdx >= 0) {
+                            presetWidget.options.values.splice(customIdx, 0, presetName);
+                        } else {
+                            presetWidget.options.values.push(presetName);
+                        }
+                    }
+                    // Set dropdown to the new preset
+                    presetWidget.value = presetName;
+                }
+
+                node.setDirtyCanvas(true);
+                console.log(`[Model Layer Editor] Saved preset '${presetName}' to browser storage`);
+            });
+
+            // Add delete button that deletes currently selected preset (if it's a user preset)
+            const deleteButton = this.addWidget("button", "🗑️ Delete Selected Preset", null, () => {
+                const presetWidget = node.widgets.find(w => w.name === "preset");
+                if (!presetWidget) return;
+
+                const presetName = presetWidget.value;
+
+                // Check if it's a built-in preset (can't delete those)
+                if (config.presets[presetName]) {
+                    alert(`Cannot delete built-in preset '${presetName}'`);
+                    return;
+                }
+
+                // Check if it's a user preset
+                const userPresets = node.loadUserPresets(nodeName);
+                if (!userPresets[presetName]) {
+                    alert(`'${presetName}' is not a user preset`);
+                    return;
+                }
+
+                // Confirm deletion
+                if (!confirm(`Delete preset '${presetName}'?`)) {
+                    return;
+                }
+
+                // Remove from localStorage
+                delete userPresets[presetName];
+                const storageKey = `comfyui_model_layer_presets_${nodeName}`;
+                localStorage.setItem(storageKey, JSON.stringify(userPresets));
+                console.log(`[Model Layer Editor] Deleted preset '${presetName}' from browser storage`);
+
+                // Update browser_presets_json widget value for Python sync
+                const browserPresetsWidgetDel = node.widgets.find(w => w.name === "browser_presets_json");
+                if (browserPresetsWidgetDel) {
+                    browserPresetsWidgetDel.value = JSON.stringify(userPresets);
+                    console.log(`[Model Layer Editor] Updated sync widget: ${Object.keys(userPresets).length} presets`);
+                }
+
+                // Remove from dropdown
+                if (presetWidget.options && presetWidget.options.values) {
+                    const idx = presetWidget.options.values.indexOf(presetName);
+                    if (idx >= 0) {
+                        presetWidget.options.values.splice(idx, 1);
+                    }
+                }
+
+                // Reset to Default
+                presetWidget.value = "Default";
+                node.applyPreset(nodeName, "Default");
+                node.setDirtyCanvas(true);
+            });
+
+            // Leave buttons at the very end of the widget array where addWidget() put them
+            // DO NOT reposition - inserting anywhere else shifts widget indices and breaks serialization
         };
 
         // Setup schedule preset widget to populate strength_schedule text field
@@ -813,18 +1189,71 @@ app.registerExtension({
             this.strengthScheduleWidget = strengthScheduleWidget;
         };
 
+        // Load user presets from localStorage (part of dual-persistence preset system)
+        nodeType.prototype.loadUserPresets = function(nodeName) {
+            const storageKey = `comfyui_model_layer_presets_${nodeName}`;
+            try {
+                const saved = localStorage.getItem(storageKey);
+                const presets = saved ? JSON.parse(saved) : {};
+                const count = Object.keys(presets).length;
+                if (count > 0) {
+                    console.log(`[Model Layer Editor] Loaded ${count} preset(s) from browser storage for ${nodeName}`);
+                }
+                return presets;
+            } catch (e) {
+                console.warn(`[Model Layer Editor] Failed to load presets from browser storage:`, e);
+                return {};
+            }
+        };
+
+        // Save user presets to localStorage (called from Python via message)
+        nodeType.prototype.saveUserPreset = function(nodeName, presetName, presetData) {
+            const storageKey = `comfyui_model_layer_presets_${nodeName}`;
+            try {
+                const presets = this.loadUserPresets(nodeName);
+                presets[presetName] = presetData;
+                localStorage.setItem(storageKey, JSON.stringify(presets));
+                console.log(`[Model Layer Editor] Saved user preset '${presetName}' for ${nodeName}`);
+            } catch (e) {
+                console.warn("[Model Layer Editor] Failed to save user preset:", e);
+            }
+        };
+
         // Apply a preset to all block toggles and strengths
         nodeType.prototype.applyPreset = function(nodeName, presetName) {
             const config = SELECTIVE_LOADER_PRESETS[nodeName];
             if (!config) return;
 
-            const preset = config.presets[presetName];
-            if (!preset) return;
+            // First check hardcoded presets
+            let preset = config.presets[presetName];
+
+            // If not found, check user presets in localStorage
+            if (!preset) {
+                const userPresets = this.loadUserPresets(nodeName);
+                preset = userPresets[presetName];
+            }
+
+            // If still not found, check if it's likely a file-saved preset that needs syncing
+            if (!preset) {
+                // Check if this preset name is in the dropdown (meaning Python knows about it from file)
+                const presetWidget = this.widgets.find(w => w.name === "preset");
+                const isInDropdown = presetWidget?.options?.values?.includes(presetName);
+
+                if (isInDropdown && nodeName.includes("ModelLayerEditor")) {
+                    // It's a file-saved preset that hasn't been synced to browser storage yet
+                    console.log(`[Model Layer Editor] Preset '${presetName}' exists in file but not browser storage. Run workflow to sync.`);
+                    // Don't show alert - just keep current values until sync happens
+                } else {
+                    console.log(`[Model Layer Editor] Preset '${presetName}' not found, keeping current values`);
+                }
+                return;
+            }
 
             const allBlocks = config.blocks;
             const enabledBlocks = preset.enabled === "ALL" ? allBlocks : preset.enabled;
             const enabledSet = new Set(enabledBlocks);
-            const strength = preset.strength;
+            const baseStrength = preset.strength;
+            const overrides = preset.overrides || {};  // Per-block strength overrides
 
             // Update all toggle and strength widgets
             for (const blockName of allBlocks) {
@@ -835,11 +1264,216 @@ app.registerExtension({
                     toggleWidget.value = enabledSet.has(blockName);
                 }
                 if (strWidget) {
-                    strWidget.value = strength;
+                    // Use override if present, otherwise base strength
+                    strWidget.value = overrides.hasOwnProperty(blockName) ? overrides[blockName] : baseStrength;
                 }
             }
 
             this.setDirtyCanvas(true);
+        };
+    }
+});
+
+// Extension for ScheduledLoRALoader - just the schedule preset dropdown
+app.registerExtension({
+    name: "ScheduledLoRA.PresetDropdown",
+
+    async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        if (nodeData.name !== "ScheduledLoRALoader") {
+            return;
+        }
+
+        const origOnNodeCreated = nodeType.prototype.onNodeCreated;
+
+        nodeType.prototype.onNodeCreated = function() {
+            if (origOnNodeCreated) {
+                origOnNodeCreated.apply(this, arguments);
+            }
+
+            const node = this;
+
+            // Setup schedule preset dropdown after node is created
+            setTimeout(() => {
+                // Find the schedule_preset dropdown widget
+                const schedulePresetWidget = node.widgets.find(w => w.name === "schedule_preset");
+                if (!schedulePresetWidget) return;
+
+                // Find the strength_schedule text widget
+                const strengthScheduleWidget = node.widgets.find(w => w.name === "strength_schedule");
+                if (!strengthScheduleWidget) return;
+
+                // Override callback to fill strength_schedule when preset is selected
+                const origCallback = schedulePresetWidget.callback;
+                schedulePresetWidget.callback = function(value) {
+                    // Look up the preset value and fill the text field
+                    const scheduleValue = SCHEDULE_PRESETS[value];
+                    if (scheduleValue !== undefined) {
+                        strengthScheduleWidget.value = scheduleValue;
+                        node.setDirtyCanvas(true);
+                    }
+
+                    // Call original callback if it exists
+                    if (origCallback) {
+                        origCallback.call(this, value);
+                    }
+                };
+            }, 50);
+        };
+    }
+});
+
+// Extension for Clippy Reloaded - display text below image
+app.registerExtension({
+    name: "ClippyReloaded.TextDisplay",
+
+    async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        if (nodeData.name !== "ClippyRebornImageLoader") {
+            return;
+        }
+
+        // Override onExecuted to display the Clippy message
+        const origOnExecuted = nodeType.prototype.onExecuted;
+        nodeType.prototype.onExecuted = function(message) {
+            if (origOnExecuted) {
+                origOnExecuted.apply(this, arguments);
+            }
+
+            // Display Clippy's message below the image
+            if (message && message.text && message.text.length > 0) {
+                const clippyText = message.text[0];
+
+                // Find or create the text display element
+                if (!this.clippyTextWidget) {
+                    // Add a text widget to display Clippy's message
+                    this.clippyTextWidget = this.addWidget("text", "clippy_says", "", () => {}, {
+                        serialize: false
+                    });
+                }
+                this.clippyTextWidget.value = clippyText;
+                this.setDirtyCanvas(true);
+            }
+        };
+    }
+});
+
+// Extension for Image of the Day - persist API keys per source
+app.registerExtension({
+    name: "ImageOfDay.ApiKeyPersistence",
+
+    async beforeRegisterNodeDef(nodeType, nodeData, app) {
+        if (nodeData.name !== "ImageOfDayLoader") {
+            return;
+        }
+
+        // Local storage key for API keys
+        const STORAGE_KEY = "comfyui_imageofday_apikeys";
+
+        // Sources that need API keys (must match Python)
+        const API_SOURCES = ["NASA APOD (API)", "Unsplash (API)", "Pexels (API)"];
+
+        // Check if source needs an API key
+        function needsApiKey(source) {
+            return API_SOURCES.includes(source);
+        }
+
+        // Load saved API keys from localStorage
+        function loadApiKeys() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        // Save API keys to localStorage
+        function saveApiKeys(keys) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+            } catch (e) {
+                console.warn("[ImageOfDay] Failed to save API keys:", e);
+            }
+        }
+
+        const origOnNodeCreated = nodeType.prototype.onNodeCreated;
+
+        nodeType.prototype.onNodeCreated = function() {
+            if (origOnNodeCreated) {
+                origOnNodeCreated.apply(this, arguments);
+            }
+
+            const node = this;
+
+            // Setup after widgets are created
+            setTimeout(() => {
+                const sourceWidget = node.widgets.find(w => w.name === "source");
+                const apiKeyWidget = node.widgets.find(w => w.name === "api_key");
+
+                if (!sourceWidget || !apiKeyWidget) return;
+
+                // Function to update API key field based on source
+                function updateApiKeyField(source) {
+                    if (needsApiKey(source)) {
+                        // Load saved key for this API source
+                        const keys = loadApiKeys();
+                        apiKeyWidget.value = keys[source] || "";
+                    } else {
+                        // No key needed for this source
+                        apiKeyWidget.value = "no key needed";
+                    }
+                }
+
+                // Set initial API key for current source
+                updateApiKeyField(sourceWidget.value);
+
+                // Override source callback to update API key field
+                const origCallback = sourceWidget.callback;
+                sourceWidget.callback = function(value) {
+                    updateApiKeyField(value);
+                    node.setDirtyCanvas(true);
+
+                    if (origCallback) {
+                        origCallback.call(this, value);
+                    }
+                };
+
+                // Save API key when it changes (only for API sources)
+                const origApiKeyCallback = apiKeyWidget.callback;
+                apiKeyWidget.callback = function(value) {
+                    const source = sourceWidget.value;
+                    if (needsApiKey(source) && value && value.trim() && value !== "no key needed") {
+                        const keys = loadApiKeys();
+                        keys[source] = value.trim();
+                        saveApiKeys(keys);
+                    }
+
+                    if (origApiKeyCallback) {
+                        origApiKeyCallback.call(this, value);
+                    }
+                };
+
+                // Store save function for use before execution
+                node._imageOfDaySaveKey = function() {
+                    const source = sourceWidget.value;
+                    const value = apiKeyWidget.value;
+                    if (needsApiKey(source) && value && value.trim() && value !== "no key needed") {
+                        const keys = loadApiKeys();
+                        keys[source] = value.trim();
+                        saveApiKeys(keys);
+                    }
+                };
+            }, 50);
+        };
+
+        // Save API key before execution
+        const origOnExecute = nodeType.prototype.onExecute;
+        nodeType.prototype.onExecute = function() {
+            if (this._imageOfDaySaveKey) {
+                this._imageOfDaySaveKey();
+            }
+            if (origOnExecute) {
+                origOnExecute.apply(this, arguments);
+            }
         };
     }
 });

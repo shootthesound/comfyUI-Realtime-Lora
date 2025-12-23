@@ -1,0 +1,860 @@
+{
+  "id": "92112d97-bb64-4b44-86f2-ea5691ef8f6e",
+  "revision": 0,
+  "last_node_id": 109,
+  "last_link_id": 273,
+  "nodes": [
+    {
+      "id": 72,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        -3031.8329581722055,
+        -1316.771878484911
+      ],
+      "size": [
+        411.4115252433435,
+        110.14673226853097
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            140
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1024,
+        1488,
+        1
+      ]
+    },
+    {
+      "id": 78,
+      "type": "VAEDecode",
+      "pos": [
+        -1939.5225167902802,
+        -1504.2957200231372
+      ],
+      "size": [
+        306.4115252433435,
+        52.22009840279634
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 146
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 147
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            148
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 76,
+      "type": "CLIPLoader",
+      "pos": [
+        -3029.461722643861,
+        -1162.995322720111
+      ],
+      "size": [
+        404.76879872725476,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            144,
+            246
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "lumina2",
+        "default"
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 73,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -3057.0911839977007,
+        -2023.7206679284577
+      ],
+      "size": [
+        425.27801513671875,
+        180.6060791015625
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 144
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            265
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Negative Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "blurry ugly bad"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 77,
+      "type": "UNETLoader",
+      "pos": [
+        -3040.80694110174,
+        -2443.803881750064
+      ],
+      "size": [
+        417.20899553284744,
+        94.44019680559268
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            261,
+            270
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "z_image_turbo_bf16.safetensors",
+        "default"
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 74,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -3073.215261997394,
+        -2272.746038280096
+      ],
+      "size": [
+        423.83001708984375,
+        177.11770629882812
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 246
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            264
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "portrait photo of GlaraH woman soldier. She is carrying an axe, held high in a threatening manner in her right hand.  The location is a sewer. She is walking towards the camera, her feet spashing in the sewage. In her left hand a torch casting a hazy beam at the viewer. Behind her we can see a pile of dead zombies that she has killed moments before.\n"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 70,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        -1957.452519435292,
+        -1912.0046474686542
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 261
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "ModelSamplingAuraFlow",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        3.23
+      ]
+    },
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        -1572.545256748836,
+        -2116.2937483958804
+      ],
+      "size": [
+        976.0567626953125,
+        1060.9766845703125
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 148
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 75,
+      "type": "VAELoader",
+      "pos": [
+        -3025.996223871912,
+        -1006.8349336230897
+      ],
+      "size": [
+        392.3286019216621,
+        101.5406888195746
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            147
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "ae.sft"
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 68,
+      "type": "KSampler",
+      "pos": [
+        -1946.9393028639915,
+        -1810.4111751787134
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 272
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 268
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 269
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 140
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            146
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1037483790035656,
+        "fixed",
+        9,
+        1,
+        "euler",
+        "sgm_uniform",
+        1
+      ]
+    },
+    {
+      "id": 107,
+      "type": "ScheduledLoRALoader",
+      "pos": [
+        -2548.013665548849,
+        -1915.7536371590845
+      ],
+      "size": [
+        270,
+        210
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 270
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 264
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 265
+        },
+        {
+          "name": "schedule_in",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            271
+          ]
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            266
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            267
+          ]
+        },
+        {
+          "name": "schedule_out",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "schedule_inv",
+          "type": "STRING",
+          "links": [
+            273
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
+        "ver": "3dd33695aa34af211da2950a0a8775016986e652",
+        "Node name for S&R": "ScheduledLoRALoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "GlaraH.safetensors",
+        1,
+        "Bell Curve (peak middle)",
+        "0:0, 0.5:1, 1:0"
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 108,
+      "type": "ScheduledLoRALoader",
+      "pos": [
+        -2246.0157531147834,
+        -1909.9778688092706
+      ],
+      "size": [
+        270,
+        210
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 271
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 266
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 267
+        },
+        {
+          "name": "schedule_in",
+          "shape": 7,
+          "type": "STRING",
+          "link": 273
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            272
+          ]
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            268
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            269
+          ]
+        },
+        {
+          "name": "schedule_out",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "schedule_inv",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "ShootTheSound/comfyUI-Realtime-Lora",
+        "ver": "3dd33695aa34af211da2950a0a8775016986e652",
+        "Node name for S&R": "ScheduledLoRALoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "zimage\\20s_horror_z_100.safetensors",
+        1,
+        "Custom",
+        ""
+      ],
+      "ndSuperSelectorEnabled": false,
+      "ndPowerEnabled": false
+    },
+    {
+      "id": 95,
+      "type": "Note",
+      "pos": [
+        -3074.6347346467523,
+        -1758.8934414894336
+      ],
+      "size": [
+        411.82749093112125,
+        88
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "TUTORIAL",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "WATCH VIDEO ON YOUTUBE\n\nhttps://youtu.be/3CdyGxvYeHo"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 109,
+      "type": "Note",
+      "pos": [
+        -3062.569520407827,
+        -1623.404643744363
+      ],
+      "size": [
+        463.233262855058,
+        258.61320970611996
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.5.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Loras I am using for this demo are:\n\nhttps://civitai.com/models/1241174/zitil-original-character-glara-h?modelVersionId=2495412\n\nhttps://civitai.com/models/1371819/1920s-horror-movies-lora?modelVersionId=2490859\n\n---\nIf you want to throw me a pint or a coffee, you can here!  https://buymeacoffee.com/lorasandlenses"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      140,
+      72,
+      0,
+      68,
+      3,
+      "LATENT"
+    ],
+    [
+      144,
+      76,
+      0,
+      73,
+      0,
+      "CLIP"
+    ],
+    [
+      146,
+      68,
+      0,
+      78,
+      0,
+      "LATENT"
+    ],
+    [
+      147,
+      75,
+      0,
+      78,
+      1,
+      "VAE"
+    ],
+    [
+      148,
+      78,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      246,
+      76,
+      0,
+      74,
+      0,
+      "CLIP"
+    ],
+    [
+      261,
+      77,
+      0,
+      70,
+      0,
+      "MODEL"
+    ],
+    [
+      264,
+      74,
+      0,
+      107,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      265,
+      73,
+      0,
+      107,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      266,
+      107,
+      1,
+      108,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      267,
+      107,
+      2,
+      108,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      268,
+      108,
+      1,
+      68,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      269,
+      108,
+      2,
+      68,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      270,
+      77,
+      0,
+      107,
+      0,
+      "MODEL"
+    ],
+    [
+      271,
+      107,
+      0,
+      108,
+      0,
+      "MODEL"
+    ],
+    [
+      272,
+      108,
+      0,
+      68,
+      0,
+      "MODEL"
+    ],
+    [
+      273,
+      107,
+      4,
+      108,
+      3,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.724729500000002,
+      "offset": [
+        4093.6570543650196,
+        2528.6211157147286
+      ]
+    },
+    "frontendVersion": "1.34.9",
+    "workflowRendererVersion": "LG",
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

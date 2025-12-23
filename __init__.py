@@ -17,7 +17,12 @@ from .musubi_qwen_image_lora_trainer import MusubiQwenImageLoraTrainer
 from .musubi_qwen_image_edit_lora_trainer import MusubiQwenImageEditLoraTrainer
 from .musubi_wan_lora_trainer import MusubiWanLoraTrainer
 from .lora_analyzer import LoRALoaderWithAnalysis
+from .lora_analyzer_v2 import NODE_CLASS_MAPPINGS as V2_NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as V2_NODE_DISPLAY_NAME_MAPPINGS
 from .selective_lora_loader import SDXLSelectiveLoRALoader, ZImageSelectiveLoRALoader, FLUXSelectiveLoRALoader, WanSelectiveLoRALoader, QwenSelectiveLoRALoader
+from .scheduled_lora_loader import ScheduledLoRALoader
+from .clipboard_image_loader import ClippyRebornImageLoader
+from .image_of_day import ImageOfDayLoader
+from .model_layer_analyzer import NODE_CLASS_MAPPINGS as MODEL_LAYER_NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as MODEL_LAYER_NODE_DISPLAY_NAME_MAPPINGS
 
 # Web directory for JavaScript extensions
 WEB_DIRECTORY = "./web/js"
@@ -37,6 +42,9 @@ NODE_CLASS_MAPPINGS = {
     "FLUXSelectiveLoRALoader": FLUXSelectiveLoRALoader,
     "WanSelectiveLoRALoader": WanSelectiveLoRALoader,
     "QwenSelectiveLoRALoader": QwenSelectiveLoRALoader,
+    "ScheduledLoRALoader": ScheduledLoRALoader,
+    "ClippyRebornImageLoader": ClippyRebornImageLoader,
+    "ImageOfDayLoader": ImageOfDayLoader,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -54,6 +62,17 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FLUXSelectiveLoRALoader": "Selective LoRA Loader (FLUX)",
     "WanSelectiveLoRALoader": "Selective LoRA Loader (Wan)",
     "QwenSelectiveLoRALoader": "Selective LoRA Loader (Qwen)",
+    "ScheduledLoRALoader": "LoRA Loader (Scheduled)",
+    "ClippyRebornImageLoader": "Clippy Reloaded (Load Image from Clipboard)",
+    "ImageOfDayLoader": "Image of the Day",
 }
+
+# Merge V2 analyzer nodes (includes combined analyzer+selective loaders)
+NODE_CLASS_MAPPINGS.update(V2_NODE_CLASS_MAPPINGS)
+NODE_DISPLAY_NAME_MAPPINGS.update(V2_NODE_DISPLAY_NAME_MAPPINGS)
+
+# Merge Model Layer Analyzer/Editor nodes
+NODE_CLASS_MAPPINGS.update(MODEL_LAYER_NODE_CLASS_MAPPINGS)
+NODE_DISPLAY_NAME_MAPPINGS.update(MODEL_LAYER_NODE_DISPLAY_NAME_MAPPINGS)
 
 __all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']

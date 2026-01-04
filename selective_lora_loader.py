@@ -59,6 +59,23 @@ def _detect_architecture(keys):
     return 'UNKNOWN'
 
 
+def _get_architecture_blocks(architecture: str) -> list:
+    """Get the ordered list of block names for an architecture (excluding other_weights)."""
+    if architecture == 'SDXL':
+        return ['text_encoder_1', 'text_encoder_2', 'input_4', 'input_5', 'input_7', 'input_8',
+                'unet_mid', 'output_0', 'output_1', 'output_2', 'output_3', 'output_4', 'output_5']
+    elif architecture == 'FLUX':
+        return [f'double_{i}' for i in range(19)] + [f'single_{i}' for i in range(38)]
+    elif architecture == 'ZIMAGE':
+        return [f'layer_{i}' for i in range(30)]
+    elif architecture == 'WAN':
+        return [f'block_{i}' for i in range(40)]
+    elif architecture == 'QWEN':
+        return [f'block_{i}' for i in range(60)]
+    else:
+        return []
+
+
 def _parse_block_weights_string(weights_str: str, architecture: str) -> Optional[Dict]:
     """
     Parse Inspire Pack-style block weight syntax.
@@ -68,13 +85,34 @@ def _parse_block_weights_string(weights_str: str, architecture: str) -> Optional
     For FLUX: %default=1.0, double=0.8, double7,12,16=1.5, single=0.5
     For Z-Image/Wan/Qwen: %default=1.0, layer=0.8, layer18-25=1.2 (or block for Wan/Qwen)
 
+    Supports both named format (above) and positional format: "1.0, 0.5, 0.8, ..."
+
     Returns dict: {block_name: (enabled, strength)} or None if no string
     """
     if not weights_str or not weights_str.strip():
         return None
 
     weights_str = weights_str.strip()
+
+    # Check if it's positional format (comma-separated numbers without %)
     if not weights_str.startswith('%'):
+        # Try to parse as positional format: "1.0, 0.5, 0.8, ..."
+        try:
+            values = [float(v.strip()) for v in weights_str.split(',') if v.strip()]
+            if values:
+                # Map to architecture blocks
+                block_names = _get_architecture_blocks(architecture)
+                if len(values) != len(block_names):
+                    return None  # Mismatch in count
+
+                result = {}
+                for i, block_name in enumerate(block_names):
+                    val = values[i]
+                    result[block_name] = (val != 0.0, val)
+                result['other_weights'] = (True, 1.0)  # Default for other weights
+                return result
+        except (ValueError, TypeError):
+            return None  # Not valid positional format
         return None
 
     # Remove leading %

@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-realtime-lora"
-description = "Train, analyze, and selectively by block load LoRAs inside ComfyUI. Supports Z-Image, Qwen Image, Qwen Image Edit, SDXL, FLUX, Wan 2.2, and SD 1.5"
-version = "1.1.5"
+description = "Train, analyze, and selectively by block load LoRAs inside ComfyUI.  Supports Z-Image, Qwen Image, Qwen Image Edit, SDXL, FLUX, Wan 2.2, and SD 1.5.  Image of the day node also included allowing image sourcing in workflow from many sites. Image load from clipboard node - Clippy Reloaded. Easy image insertion into your workflows from anywhere."
+version = "2.0.0"
 license = "MIT"
 authors = [
     { name = "Peter Neill" }
@@ -15,5 +15,6 @@ Repository = "https://github.com/ShootTheSound/comfyUI-Realtime-Lora"
 Issues = "https://github.com/ShootTheSound/comfyUI-Realtime-Lora/issues"
 
 [tool.comfy]
-node_class_mappings = "NODE_CLASS_MAPPINGS"
-node_display_name_mappings = "NODE_DISPLAY_NAME_MAPPINGS"
+PublisherId = "shootthesound"
+DisplayName = "-realtime-lora"
+Icon = ""

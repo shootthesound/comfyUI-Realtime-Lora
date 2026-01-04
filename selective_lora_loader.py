@@ -338,7 +338,12 @@ ZIMAGE_PRESETS = {
     "Mid-Late (15-29)": set(range(15, 30)),
     "Skip Early (10-29)": set(range(10, 30)),
     "Mid Only (10-19)": set(range(10, 20)),
+    "Early Only (0-9)": set(range(10)),
     "Peak Impact (18-25)": set(range(18, 26)),
+    "Face Priority (16-24)": set(range(16, 25)),
+    "Face Priority Aggressive (14-25)": set(range(14, 26)),
+    "Evens Only": set(range(0, 30, 2)),  # 0,2,4,6,8,10,12,14,16,18,20,22,24,26,28
+    "Odds Only": set(range(1, 30, 2)),   # 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29
     "Custom": None,  # Use individual toggles
 }
 
@@ -372,6 +377,8 @@ FLUX_PRESETS = {
     "Face Focus": FLUX_FACE_BLOCKS.copy(),  # double 7,12,16 + single 7,12,16,20
     "Face Aggressive": FLUX_FACE_AGGRESSIVE.copy(),  # Extended for overtrained LoRAs
     "Style Only (No Face)": FLUX_STYLE_BLOCKS.copy(),  # All except facial layers
+    "Evens Only": {f"double_{i}" for i in range(0, 19, 2)} | {f"single_{i}" for i in range(0, 38, 2)},
+    "Odds Only": {f"double_{i}" for i in range(1, 19, 2)} | {f"single_{i}" for i in range(1, 38, 2)},
     "Custom": None,  # Use individual toggles
 }
 
@@ -384,6 +391,8 @@ WAN_PRESETS = {
     "Skip Early (10-39)": set(range(10, 40)),
     "Mid Only (15-25)": set(range(15, 26)),
     "Early Only (0-19)": set(range(20)),
+    "Evens Only": set(range(0, 40, 2)),
+    "Odds Only": set(range(1, 40, 2)),
     "Custom": None,  # Use individual toggles
 }
 
@@ -396,6 +405,8 @@ QWEN_PRESETS = {
     "Skip Early (15-59)": set(range(15, 60)),
     "Mid Only (20-40)": set(range(20, 41)),
     "Early Only (0-29)": set(range(30)),
+    "Evens Only": set(range(0, 60, 2)),
+    "Odds Only": set(range(1, 60, 2)),
     "Custom": None,  # Use individual toggles
 }
 

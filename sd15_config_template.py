@@ -105,7 +105,7 @@ SD15_VRAM_PRESETS = {
     "Max (768px)": {
         "optimizer": "AdamW",
         "mixed_precision": "fp16",
-        "batch_size": 4,
+        "batch_size": 1,
         "gradient_checkpointing": False,
         "cache_latents": True,
         "resolution": 768,

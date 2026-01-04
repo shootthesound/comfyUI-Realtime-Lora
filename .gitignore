@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Config files (contain user paths/API keys)
+.config.json
+.musubi_*.json
+.sdxl_config.json
+.sd15_config.json
+.flux_config.json
+.v2_save_paths.json
+.image_of_day_config.json
+.model_layer_*.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+__pycache__/

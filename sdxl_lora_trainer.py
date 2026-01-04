@@ -224,6 +224,10 @@ class SDXLLoraTrainer:
                     "default": saved.get('custom_python_exe', ""),
                     "tooltip": "Advanced: Optionally enter the full path to a custom python.exe (e.g. C:\\my-venv\\Scripts\\python.exe). If empty, uses the venv inside sd_scripts_path. The sd_scripts_path field is still required for locating training scripts."
                 }),
+                "no_half_vae": ("BOOLEAN", {
+                    "default": saved.get('no_half_vae', False),
+                    "tooltip": "Disable half-precision for VAE. Enable this if you get NaN errors during training with certain models."
+                }),
             },
             "optional": {
                 "image_1": ("IMAGE", {"tooltip": "Training image (not needed if images_path is set)."}),
@@ -258,6 +262,7 @@ class SDXLLoraTrainer:
         keep_lora=True,
         output_name="MyLora",
         custom_python_exe="",
+        no_half_vae=False,
         image_1=None,
         **kwargs
     ):
@@ -368,6 +373,7 @@ class SDXLLoraTrainer:
             'keep_lora': keep_lora,
             'output_name': output_name,
             'custom_python_exe': custom_python_exe,
+            'no_half_vae': no_half_vae,
         }
         _save_sdxl_config()
 
@@ -472,6 +478,11 @@ class SDXLLoraTrainer:
                 train_script,
                 f"--config_file={config_path}",
             ]
+
+            # Add no_half_vae flag if enabled (fixes NaN errors with some models)
+            if no_half_vae:
+                cmd.append("--no_half_vae")
+                print("[SDXL LoRA] Using --no_half_vae to prevent NaN errors")
 
             print(f"[SDXL LoRA] Starting training: {run_name}")
             print(f"[SDXL LoRA] Images: {num_images}, Steps: {training_steps}, LR: {learning_rate}, Rank: {lora_rank}")

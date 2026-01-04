@@ -109,7 +109,7 @@ SDXL_VRAM_PRESETS = {
     "Max (1024px)": {
         "optimizer": "AdamW",
         "mixed_precision": "bf16",
-        "batch_size": 4,
+        "batch_size": 1,
         "gradient_checkpointing": False,
         "cache_latents": True,
         "cache_text_encoder_outputs": False,

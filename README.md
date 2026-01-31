@@ -157,13 +157,13 @@ This node trains LoRAs on-the-fly from your images without leaving ComfyUI. SDXL
 
    **Z-Image:** Download the de-distilled model from https://huggingface.co/ostris/Z-Image-De-Turbo/tree/main - save to `models/diffusion_models`. Your trained LoRAs will work with the regular distilled Z-Image Turbo model.
 
-   **Qwen Image:** Download bf16 models (not fp8) from Comfy-Org or from the links in the exampe workflows:
+   **Qwen Image:** Download bf16 models (not fp8) from Comfy-Org or from the links in the example workflows:
    - DiT: https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI (qwen_image_bf16.safetensors) or https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI for Edit models
    - VAE: qwen_image_vae.safetensors
    - Text Encoder: qwen_2.5_vl_7b.safetensors (from clip folder)
    - Note: Pre-quantized fp8 models don't work for training - use bf16 versions.
 
-   **Wan 2.2:** Download fp16 models from Comfy-Org or from the links in the exampe workflows:
+   **Wan 2.2:** Download fp16 models from Comfy-Org or from the links in the example workflows:
    - DiT: wan2.2_t2v_14B_fp16.safetensors (High or Low noise variant)
    - VAE: wan_2.2_vae.safetensors
    - T5: models_t5_umt5-xxl-enc-bf16.pth

@@ -27,14 +27,19 @@
 
 ## What's New
 
-### FLUX Klein 4B/9B Support
+### FLUX Klein 4B/9B Training & Editing
 
-Train LoRAs for Black Forest Labs' fastest FLUX models via Musubi Tuner:
+Full training and editing support for Black Forest Labs' fastest FLUX models:
 
-- **FLUX Klein 4B** - ~13GB VRAM, Apache 2.0 license, 5 double + 20 single blocks
-- **FLUX Klein 9B** - ~29GB VRAM, 8 double + 24 single blocks
+**Training** (via Musubi Tuner):
+- **FLUX Klein 4B** - ~13GB VRAM, Apache 2.0 license
+- **FLUX Klein 9B** - ~29GB VRAM
 - **Independent block swap control** - Fine-tune VRAM usage separately from resolution/fp8 settings
-- **New V2 Analyzer nodes** - Per-block analysis and selective loading for both variants
+
+**Editing & Analysis** (new V2 nodes):
+- **FLUX Klein 4B Analyzer + Selective Loader V2** - 25 blocks (5 double + 20 single)
+- **FLUX Klein 9B Analyzer + Selective Loader V2** - 32 blocks (8 double + 24 single)
+- Per-block strength control, scheduling, and LoRA saving
 
 Uses Qwen3 text encoder and FLUX.2 VAE. Train on "base" (undistilled) versions.
 
@@ -44,6 +49,7 @@ Train with the undistilled Z-Image base model for maximum quality:
 
 - Trained LoRAs work with both base and turbo models
 - Same VRAM presets as turbo trainer (block swaps built into Low/Min modes)
+- Existing Z-Image V2 Analyzer works with base-trained LoRAs (same architecture)
 
 ### V2 Combined Analyzer + Selective Loader Nodes
 

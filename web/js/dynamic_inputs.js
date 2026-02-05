@@ -556,6 +556,14 @@ app.registerExtension({
                 node.combineBlockWidgets();
                 node.addPresetWidget(nodeData.name);
                 node.setupSchedulePresetWidget();
+                node.setupBidirectionalSync(nodeData.name);
+
+                // Populate string on first creation
+                setTimeout(() => {
+                    if (node.updateStringFromUI) {
+                        node.updateStringFromUI();
+                    }
+                }, 150);
 
                 // Double the default width for better slider usability
                 const minWidth = 500;
@@ -645,8 +653,26 @@ app.registerExtension({
                     }
                 }
 
+                // Update string from restored UI values (for copy/paste or workflow load)
+                if (node.updateStringFromUI) {
+                    node.updateStringFromUI();
+                }
+
                 node.setDirtyCanvas(true);
             }, 150); // Longer delay to ensure ComfyUI finishes deserializing first
+        };
+
+        // Hook onMouseUp to trigger sync after slider interaction completes
+        const origOnMouseUp = nodeType.prototype.onMouseUp;
+        nodeType.prototype.onMouseUp = function(e, localPos, graphCanvas) {
+            const result = origOnMouseUp ? origOnMouseUp.apply(this, arguments) : false;
+
+            // Trigger UI→Text sync after any mouse interaction that might have changed sliders
+            if (this.updateStringFromUI) {
+                this.updateStringFromUI();
+            }
+
+            return result;
         };
 
         // Hook onExecuted to store analysis data and sync user presets
@@ -759,6 +785,10 @@ app.registerExtension({
 
             // Combined draw function for toggle widget (strength widget will be hidden)
             toggle.draw = function(ctx, node, widgetWidth, y, widgetHeight) {
+                // Store draw position for Y-axis hit detection in mouse handler
+                toggle._lastDrawY = y;
+                toggle._lastDrawHeight = widgetHeight;
+
                 const margin = 10;
                 const checkboxSize = 14;
                 const labelWidth = 95; // Fixed label width
@@ -896,21 +926,43 @@ app.registerExtension({
                 }
             };
 
-            // Mouse handling for slider - let default toggle behavior work for other clicks
+            // Mouse handling for slider with precise Y-axis hit detection and click-to-jump
+            // NOTE: LiteGraph doesn't send pointerdown to widget.mouse - only pointermove and pointerup
+            // So we handle: pointermove for dragging, pointerup for click detection
             const originalMouse = toggle.mouse?.bind(toggle);
             toggle.mouse = function(event, pos, node) {
                 const widgetWidth = node.size[0];
                 const info = toggle.sliderInfo;
                 const layout = info.getLayout(widgetWidth);
                 const localX = pos[0];
+                const absoluteY = pos[1];
 
-                // Slider interaction - intercept drag on slider area
-                if (localX >= layout.sliderX - 5 && localX <= layout.sliderX + layout.sliderWidth + 5) {
-                    if (event.type === "pointerdown" || event.type === "pointermove") {
+                // Convert absolute Y to widget-relative Y using stored draw position
+                if (!toggle._lastDrawY || !toggle._lastDrawHeight) {
+                    // Fallback if draw hasn't happened yet
+                    return originalMouse ? originalMouse(event, pos, node) : false;
+                }
+
+                const widgetY = toggle._lastDrawY;
+                const widgetHeight = toggle._lastDrawHeight;
+                const localY = absoluteY - widgetY;
+                const trackCenterY = widgetHeight / 2;
+                const verticalTolerance = 4;
+
+                // Check if in slider area (X: within slider bounds, Y: near track)
+                const inSliderX = localX >= layout.sliderX && localX <= layout.sliderX + layout.sliderWidth;
+                const inSliderY = Math.abs(localY - trackCenterY) <= verticalTolerance;
+
+                // Handle pointermove: continue drag if already dragging, or start if in slider area
+                if (event.type === "pointermove") {
+                    if (toggle._wasDragging || (inSliderX && inSliderY)) {
+                        // Track that we're dragging (moved since mousedown)
+                        toggle._wasDragging = true;
+
+                        // Dragging: adjust slider value
                         let normalized = (localX - layout.sliderX) / layout.sliderWidth;
                         normalized = Math.max(0, Math.min(1, normalized));
                         let newStrength = info.min + normalized * (info.max - info.min);
-                        // Snap to step
                         newStrength = Math.round(newStrength / info.step) * info.step;
                         newStrength = Math.max(info.min, Math.min(info.max, newStrength));
                         strength.value = newStrength;
@@ -919,7 +971,41 @@ app.registerExtension({
                     }
                 }
 
-                // Let default behavior handle toggle clicks
+                if (inSliderX && inSliderY) {
+                    if (event.type === "pointerup") {
+                        // pointerup without prior pointermove = click
+                        if (!toggle._wasDragging) {
+                            // Calculate current handle position
+                            let strengthVal = parseFloat(strength.value);
+                            if (isNaN(strengthVal)) strengthVal = 1.0;
+                            const range = info.max - info.min;
+                            const normalizedStrength = (strengthVal - info.min) / range;
+                            const handleX = layout.sliderX + normalizedStrength * layout.sliderWidth;
+                            const handleRadius = 6;
+
+                            const distanceToHandle = Math.abs(localX - handleX);
+
+                            // LiteGraph already toggled the value on click, so:
+                            // - Click on handle: keep the toggle (do nothing)
+                            // - Click on track: undo toggle and jump to position
+                            if (distanceToHandle > handleRadius) {
+                                // Click on track → undo LiteGraph's toggle, then jump
+                                toggle.value = !toggle.value; // Undo the toggle
+                                let normalized = (localX - layout.sliderX) / layout.sliderWidth;
+                                normalized = Math.max(0, Math.min(1, normalized));
+                                let newStrength = info.min + normalized * (info.max - info.min);
+                                newStrength = Math.round(newStrength / info.step) * info.step;
+                                newStrength = Math.max(info.min, Math.min(info.max, newStrength));
+                                strength.value = newStrength;
+                                node.setDirtyCanvas(true);
+                            }
+                        }
+                        toggle._wasDragging = false;
+                        return true;
+                    }
+                }
+
+                // Let default behavior handle other areas
                 if (originalMouse) {
                     return originalMouse(event, pos, node);
                 }
@@ -1309,7 +1395,159 @@ app.registerExtension({
                 }
             }
 
+            // Trigger bidirectional sync to update string
+            if (this.updateStringFromUI) {
+                this.updateStringFromUI();
+            }
+
             this.setDirtyCanvas(true);
+        };
+
+        // Bidirectional sync between block_weights_string and UI sliders
+        nodeType.prototype.setupBidirectionalSync = function(nodeName) {
+            const node = this;
+            const config = SELECTIVE_LOADER_PRESETS[nodeName];
+            if (!config) return;
+
+            const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+            if (!stringWidget) return;
+
+            // Track last known string value
+            node._lastStringValue = stringWidget.value || "";
+
+            // Text → UI sync: Parse string and update sliders when text changes
+            node.parseStringToUI = function() {
+                const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+                if (!stringWidget || !stringWidget.value.trim() || stringWidget._updating) return;
+
+                const input = stringWidget.value.trim();
+
+                // Support both formats:
+                // 1. Named format: "%default=1.0, te1=0.5, in7-8=1.2"
+                // 2. Positional format: "1.0, 0.0, 1.5, ..." (comma-separated numbers)
+
+                if (input.startsWith('%')) {
+                    // Named format - not implemented yet for UI sync (Python handles it)
+                    return;
+                }
+
+                // Positional format: comma-separated numbers
+                const values = input.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+                const blocks = config.blocks;
+
+                if (values.length !== blocks.length) {
+                    console.warn(`Block weights string has ${values.length} values but expected ${blocks.length}`);
+                    return;
+                }
+
+                // Update UI sliders from string values
+                for (let i = 0; i < blocks.length && i < values.length; i++) {
+                    const blockName = blocks[i];
+                    const value = values[i];
+
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && strWidget) {
+                        toggleWidget.value = value !== 0;
+                        strWidget.value = value !== 0 ? value : 1.0;
+                    }
+                }
+
+                node.setDirtyCanvas(true);
+            };
+
+            // UI → Text sync: Update string when sliders change
+            node.updateStringFromUI = function() {
+                const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+                if (!stringWidget || stringWidget._updating) return;
+
+                const blocks = config.blocks;
+                const values = [];
+
+                for (const blockName of blocks) {
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && strWidget) {
+                        // If enabled, use strength value; if disabled, use 0
+                        values.push(toggleWidget.value ? strWidget.value.toFixed(2) : "0.00");
+                    } else {
+                        values.push("1.00"); // Default fallback
+                    }
+                }
+
+                // Set flag to prevent infinite loop
+                stringWidget._updating = true;
+                stringWidget.value = values.join(", ");
+                stringWidget._updating = false;
+            };
+
+            // Add method to check for text changes (called on various interactions)
+            node.checkAndSyncTextChanges = function() {
+                const stringWidget = node.widgets.find(w => w.name === 'block_weights_string');
+                if (!stringWidget) return;
+
+                // Check if string widget text changed
+                if (stringWidget.value !== node._lastStringValue && !stringWidget._updating) {
+                    node._lastStringValue = stringWidget.value;
+                    node.parseStringToUI();
+                }
+            };
+
+            // Check on mouse interactions with node (text → UI sync)
+            const origOnMouseDown = node.onMouseDown;
+            node.onMouseDown = function(e, pos, canvas) {
+                // Check if text changed and sync to UI before processing interaction
+                node.checkAndSyncTextChanges();
+
+                if (origOnMouseDown) {
+                    return origOnMouseDown.apply(this, arguments);
+                }
+            };
+
+            // Also check on widget interaction for text field specifically
+            if (stringWidget.inputEl) {
+                stringWidget.inputEl.addEventListener('blur', () => {
+                    node.checkAndSyncTextChanges();
+                });
+                stringWidget.inputEl.addEventListener('change', () => {
+                    node.checkAndSyncTextChanges();
+                });
+            }
+
+            // Whenever a slider changes, update the string
+            // Use setTimeout to ensure widgets are fully initialized
+            setTimeout(() => {
+                for (const blockName of config.blocks) {
+                    const toggleWidget = node.widgets.find(w => w.name === blockName);
+                    const strWidget = node.widgets.find(w => w.name === blockName + "_str");
+
+                    if (toggleWidget && strWidget) {
+                        // Store reference to node for closure
+                        const nodeRef = node;
+
+                        // Wrap original callbacks
+                        const origToggleCallback = toggleWidget.callback;
+                        toggleWidget.callback = function(value) {
+                            if (origToggleCallback) origToggleCallback.call(this, value);
+                            // Update string after toggle changes
+                            if (nodeRef.updateStringFromUI) {
+                                nodeRef.updateStringFromUI();
+                            }
+                        };
+
+                        const origStrCallback = strWidget.callback;
+                        strWidget.callback = function(value) {
+                            if (origStrCallback) origStrCallback.call(this, value);
+                            // Update string after strength changes
+                            if (nodeRef.updateStringFromUI) {
+                                nodeRef.updateStringFromUI();
+                            }
+                        };
+                    }
+                }
+            }, 200);
         };
     }
 });

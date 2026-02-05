@@ -1421,18 +1421,24 @@ def _create_combined_node_class(config: dict):
                     "default": "",
                     "tooltip": "Filename for saved LoRA (timestamp auto-appended). Leave empty for auto-name."
                 }),
+                "block_weights_string": ("STRING", {
+                    "multiline": True,
+                    "default": "",
+                    "tooltip": "Input/Output: Block weights in positional (1.0, 0.5, 1.2...) or named format (%default=1.0, te1=0.5, in7-8=1.2). Syncs bidirectionally with UI sliders. String input overrides UI."
+                }),
             }
 
             return inputs
 
-        RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING", "STRING", "STRING")
-        RETURN_NAMES = ("model", "positive", "negative", "analysis", "analysis_json")
+        RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING", "STRING", "STRING", "STRING")
+        RETURN_NAMES = ("model", "positive", "negative", "analysis", "analysis_json", "weights_output")
         OUTPUT_TOOLTIPS = (
             "Model with LoRA applied (filtered by enabled blocks).",
             "Positive conditioning (with hooks if using schedule).",
             "Negative conditioning (with hooks if using schedule).",
             "Per-block analysis showing impact scores.",
             "JSON analysis data for UI coloring.",
+            "Block weights string output (syncs with UI sliders).",
         )
         FUNCTION = "load_analyze_and_filter"
         CATEGORY = "loaders/lora"
@@ -1440,7 +1446,7 @@ def _create_combined_node_class(config: dict):
         DESCRIPTION = config["description"]
 
         def load_analyze_and_filter(self, model, positive, negative, lora_name, strength, preset,
-                                    schedule_preset="Custom", strength_schedule="", lora_path_opt=None, save_refined_lora=False, save_path="", save_filename="", **kwargs):
+                                    schedule_preset="Custom", strength_schedule="", lora_path_opt=None, save_refined_lora=False, save_path="", save_filename="", block_weights_string="", **kwargs):
             cfg = self._config
             architecture = cfg["architecture"]
             blocks = cfg["blocks"]
@@ -1452,7 +1458,7 @@ def _create_combined_node_class(config: dict):
             else:
                 lora_path = folder_paths.get_full_path("loras", lora_name)
             if not lora_path or not os.path.exists(lora_path):
-                return {"ui": {"analysis_json": ["{}"]}, "result": (model, clip, "Error: LoRA file not found", "{}", None)}
+                return {"ui": {"analysis_json": ["{}"]}, "result": (model, positive, negative, "Error: LoRA file not found", "{}", "")}
 
             print(f"[{cfg['display_name']}] Loading: {lora_name}")
 
@@ -1471,30 +1477,49 @@ def _create_combined_node_class(config: dict):
             arch_display = f"{detected_arch} ({lora_type})" if lora_type != 'LoRA' else detected_arch
             print(f"[{cfg['display_name']}] Detected: {arch_display} ({confidence} via {method})")
 
+            # Check if string input is provided (overrides UI)
+            from .selective_lora_loader import _parse_block_weights_string
+            parsed_weights = _parse_block_weights_string(block_weights_string, architecture)
+
             # Determine enabled blocks and strengths
             # Note: JS always sends "Custom" so we read individual widget values
-            preset_cfg = presets.get(preset)
-            if preset_cfg is not None:
-                # Using a preset (only when JS is not present)
-                if preset_cfg["enabled"] == "ALL":
-                    enabled_blocks = set(blocks)
-                else:
-                    enabled_blocks = set(preset_cfg["enabled"])
-                block_strengths = {b: preset_cfg["strength"] for b in enabled_blocks}
-                other_enabled = "other_weights" in enabled_blocks or preset != "All Off"
-                other_strength = preset_cfg["strength"]
-            else:
-                # Custom mode - read from kwargs
+            if parsed_weights:
+                # Use parsed weights from string
                 enabled_blocks = set()
                 block_strengths = {}
-                for block in blocks:
-                    if block == "other_weights":
-                        continue
-                    if kwargs.get(block, True):
-                        enabled_blocks.add(block)
-                        block_strengths[block] = kwargs.get(f"{block}_str", 1.0)
-                other_enabled = kwargs.get("other_weights", True)
-                other_strength = kwargs.get("other_weights_str", 1.0)
+                for block_name, (enabled, blk_str) in parsed_weights.items():
+                    if block_name == 'other_weights':
+                        other_enabled = enabled
+                        other_strength = blk_str
+                    elif enabled:
+                        enabled_blocks.add(block_name)
+                        block_strengths[block_name] = blk_str
+                using_preset = "String Input"
+            else:
+                preset_cfg = presets.get(preset)
+                if preset_cfg is not None:
+                    # Using a preset (only when JS is not present)
+                    if preset_cfg["enabled"] == "ALL":
+                        enabled_blocks = set(blocks)
+                    else:
+                        enabled_blocks = set(preset_cfg["enabled"])
+                    block_strengths = {b: preset_cfg["strength"] for b in enabled_blocks}
+                    other_enabled = "other_weights" in enabled_blocks or preset != "All Off"
+                    other_strength = preset_cfg["strength"]
+                    using_preset = preset
+                else:
+                    # Custom mode - read from kwargs
+                    enabled_blocks = set()
+                    block_strengths = {}
+                    for block in blocks:
+                        if block == "other_weights":
+                            continue
+                        if kwargs.get(block, True):
+                            enabled_blocks.add(block)
+                            block_strengths[block] = kwargs.get(f"{block}_str", 1.0)
+                    other_enabled = kwargs.get("other_weights", True)
+                    other_strength = kwargs.get("other_weights_str", 1.0)
+                    using_preset = None
 
             # Filter LoRA by enabled blocks
             original_count = len(lora_state_dict)
@@ -1586,8 +1611,17 @@ def _create_combined_node_class(config: dict):
             if saved_path:
                 info_lines.append(f"Saved: {os.path.basename(saved_path)}")
 
+            # Generate weights_output string - simple positional format
+            weights_list = []
+            for block in blocks:
+                if block == "other_weights":
+                    continue  # Skip other_weights in positional format
+                blk_str = block_strengths.get(block, 0.0) if block in enabled_blocks else 0.0
+                weights_list.append(f"{blk_str:.2f}")
+            weights_output = ", ".join(weights_list)
+
             # Return with UI format for analysis_json passthrough to JS
-            return {"ui": {"analysis_json": [analysis_json]}, "result": (model_out, positive_out, negative_out, "\n".join(info_lines), analysis_json)}
+            return {"ui": {"analysis_json": [analysis_json]}, "result": (model_out, positive_out, negative_out, "\n".join(info_lines), analysis_json, weights_output)}
 
     # Set class attributes from config
     CombinedAnalyzerSelectiveLoader.__name__ = config["node_id"]

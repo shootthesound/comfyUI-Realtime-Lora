@@ -18,7 +18,7 @@ from .musubi_qwen_image_edit_lora_trainer import MusubiQwenImageEditLoraTrainer
 from .musubi_wan_lora_trainer import MusubiWanLoraTrainer
 from .lora_analyzer import LoRALoaderWithAnalysis
 from .lora_analyzer_v2 import NODE_CLASS_MAPPINGS as V2_NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as V2_NODE_DISPLAY_NAME_MAPPINGS
-from .selective_lora_loader import SDXLSelectiveLoRALoader, ZImageSelectiveLoRALoader, FLUXSelectiveLoRALoader, WanSelectiveLoRALoader, QwenSelectiveLoRALoader
+from .selective_lora_loader import SDXLSelectiveLoRALoader, ZImageSelectiveLoRALoader, FLUXSelectiveLoRALoader, FLUXKleinSelectiveLoRALoader, WanSelectiveLoRALoader, QwenSelectiveLoRALoader
 from .scheduled_lora_loader import ScheduledLoRALoader
 from .clipboard_image_loader import ClippyRebornImageLoader
 from .image_of_day import ImageOfDayLoader
@@ -40,6 +40,7 @@ NODE_CLASS_MAPPINGS = {
     "SDXLSelectiveLoRALoader": SDXLSelectiveLoRALoader,
     "ZImageSelectiveLoRALoader": ZImageSelectiveLoRALoader,
     "FLUXSelectiveLoRALoader": FLUXSelectiveLoRALoader,
+    "FLUXKleinSelectiveLoRALoader": FLUXKleinSelectiveLoRALoader,
     "WanSelectiveLoRALoader": WanSelectiveLoRALoader,
     "QwenSelectiveLoRALoader": QwenSelectiveLoRALoader,
     "ScheduledLoRALoader": ScheduledLoRALoader,
@@ -60,6 +61,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SDXLSelectiveLoRALoader": "Selective LoRA Loader (SDXL)",
     "ZImageSelectiveLoRALoader": "Selective LoRA Loader (Z-Image)",
     "FLUXSelectiveLoRALoader": "Selective LoRA Loader (FLUX)",
+    "FLUXKleinSelectiveLoRALoader": "Selective LoRA Loader (FLUX 2 Klein)",
     "WanSelectiveLoRALoader": "Selective LoRA Loader (Wan)",
     "QwenSelectiveLoRALoader": "Selective LoRA Loader (Qwen)",
     "ScheduledLoRALoader": "LoRA Loader (Scheduled)",

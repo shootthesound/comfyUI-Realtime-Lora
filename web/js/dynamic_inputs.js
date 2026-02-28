@@ -277,6 +277,30 @@ const SELECTIVE_LOADER_PRESETS = {
             "Odds Only": { enabled: [...Array.from({length: 9}, (_, i) => `double_${i * 2 + 1}`), ...Array.from({length: 19}, (_, i) => `single_${i * 2 + 1}`)], strength: 1.0 },
         }
     },
+    "FLUXKleinSelectiveLoRALoader": {
+        blocks: [
+            ...Array.from({length: 8}, (_, i) => `double_${i}`),
+            ...Array.from({length: 24}, (_, i) => `single_${i}`),
+            "other_weights"
+        ],
+        presets: {
+            "All Blocks": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Double Blocks Only": { enabled: [...Array.from({length: 8}, (_, i) => `double_${i}`), "other_weights"], strength: 1.0 },
+            "Single Blocks Only": { enabled: [...Array.from({length: 24}, (_, i) => `single_${i}`), "other_weights"], strength: 1.0 },
+            "High Impact Double": { enabled: Array.from({length: 4}, (_, i) => `double_${i + 4}`), strength: 1.0 },
+            "Face Focus": { enabled: ["double_4", "double_7", "single_7", "single_12", "single_16", "single_20"], strength: 1.0 },
+            "Style Only (No Face)": {
+                enabled: [
+                    ...Array.from({length: 8}, (_, i) => `double_${i}`),
+                    ...Array.from({length: 24}, (_, i) => `single_${i}`)
+                ].filter(b => !["double_4", "double_7", "single_7", "single_12", "single_16", "single_20"].includes(b)),
+                strength: 1.0
+            },
+            "Evens Only": { enabled: [...Array.from({length: 4}, (_, i) => `double_${i * 2}`), ...Array.from({length: 12}, (_, i) => `single_${i * 2}`)], strength: 1.0 },
+            "Odds Only": { enabled: [...Array.from({length: 4}, (_, i) => `double_${i * 2 + 1}`), ...Array.from({length: 12}, (_, i) => `single_${i * 2 + 1}`)], strength: 1.0 },
+        }
+    },
     "WanSelectiveLoRALoader": {
         blocks: [...Array.from({length: 40}, (_, i) => `block_${i}`), "other_weights"],
         presets: {
@@ -367,6 +391,31 @@ const SELECTIVE_LOADER_PRESETS = {
             },
             "Evens Only": { enabled: [...Array.from({length: 10}, (_, i) => `double_${i * 2}`), ...Array.from({length: 19}, (_, i) => `single_${i * 2}`)], strength: 1.0 },
             "Odds Only": { enabled: [...Array.from({length: 9}, (_, i) => `double_${i * 2 + 1}`), ...Array.from({length: 19}, (_, i) => `single_${i * 2 + 1}`)], strength: 1.0 },
+        }
+    },
+    "FLUXKleinAnalyzerSelectiveLoaderV2": {
+        blocks: [
+            ...Array.from({length: 8}, (_, i) => `double_${i}`),
+            ...Array.from({length: 24}, (_, i) => `single_${i}`),
+            "other_weights"
+        ],
+        presets: {
+            "Default": { enabled: "ALL", strength: 1.0 },
+            "All Off": { enabled: [], strength: 0.0 },
+            "Half Strength": { enabled: "ALL", strength: 0.5 },
+            "Double Blocks Only": { enabled: [...Array.from({length: 8}, (_, i) => `double_${i}`), "other_weights"], strength: 1.0 },
+            "Single Blocks Only": { enabled: [...Array.from({length: 24}, (_, i) => `single_${i}`), "other_weights"], strength: 1.0 },
+            "High Impact Double": { enabled: Array.from({length: 4}, (_, i) => `double_${i + 4}`), strength: 1.0 },
+            "Face Focus": { enabled: ["double_4", "double_7", "single_7", "single_12", "single_16", "single_20"], strength: 1.0 },
+            "Style Only (No Face)": {
+                enabled: [
+                    ...Array.from({length: 8}, (_, i) => `double_${i}`),
+                    ...Array.from({length: 24}, (_, i) => `single_${i}`)
+                ].filter(b => !["double_4", "double_7", "single_7", "single_12", "single_16", "single_20"].includes(b)),
+                strength: 1.0
+            },
+            "Evens Only": { enabled: [...Array.from({length: 4}, (_, i) => `double_${i * 2}`), ...Array.from({length: 12}, (_, i) => `single_${i * 2}`)], strength: 1.0 },
+            "Odds Only": { enabled: [...Array.from({length: 4}, (_, i) => `double_${i * 2 + 1}`), ...Array.from({length: 12}, (_, i) => `single_${i * 2 + 1}`)], strength: 1.0 },
         }
     },
     "WanAnalyzerSelectiveLoaderV2": {
@@ -476,12 +525,14 @@ app.registerExtension({
             "SDXLSelectiveLoRALoader",
             "ZImageSelectiveLoRALoader",
             "FLUXSelectiveLoRALoader",
+            "FLUXKleinSelectiveLoRALoader",
             "WanSelectiveLoRALoader",
             "QwenSelectiveLoRALoader",
             // V2 Combined Analyzer + Selective Loaders
             "ZImageAnalyzerSelectiveLoaderV2",
             "SDXLAnalyzerSelectiveLoaderV2",
             "FLUXAnalyzerSelectiveLoaderV2",
+            "FLUXKleinAnalyzerSelectiveLoaderV2",
             "WanAnalyzerSelectiveLoaderV2",
             "QwenAnalyzerSelectiveLoaderV2",
             // Model Layer Editor nodes (base model per-block control)

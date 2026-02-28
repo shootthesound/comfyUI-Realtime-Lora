@@ -708,8 +708,9 @@ def _extract_block_id_v2(key: str, architecture: str) -> str:
         match = re.search(r'blocks[._](\d+)', key)
         return f"block_{match.group(1)}" if match else 'other'
 
-    elif architecture == 'FLUX':
+    elif architecture in ('FLUX', 'FLUX_KLEIN'):
         # FLUX has double blocks (19) and single blocks (38)
+        # FLUX_KLEIN has double blocks (8) and single blocks (24) - same key patterns
         # Different trainers use different naming:
         #   - Standard: double_blocks.N, single_blocks.N
         #   - AI-Toolkit: transformer.transformer_blocks.N (double), transformer.single_transformer_blocks.N (single)
@@ -1137,6 +1138,38 @@ Supports strength scheduling format: 0:.2,.5:.8,1:1.0""",
                                                  if b not in ["double_7", "double_12", "double_16", "single_7", "single_12", "single_16", "single_20"]], "strength": 1.0},
             "Evens Only": {"enabled": [f"double_{i}" for i in range(0, 19, 2)] + [f"single_{i}" for i in range(0, 38, 2)], "strength": 1.0},
             "Odds Only": {"enabled": [f"double_{i}" for i in range(1, 19, 2)] + [f"single_{i}" for i in range(1, 38, 2)], "strength": 1.0},
+            "Custom": None,
+        },
+    },
+    "FLUX_KLEIN": {
+        "node_id": "FLUXKleinAnalyzerSelectiveLoaderV2",
+        "display_name": "FLUX 2 Klein Analyzer + Selective Loader V2",
+        "description": """Combined analyzer and selective loader for FLUX 2 Klein 9B LoRAs.
+Works with both flux-2-klein-9b (distilled) and flux-2-klein-base-9b - same block architecture.
+Analyzes block impact and allows per-block control with strength shaping.
+
+Block Guide (32 total):
+- double_0-7: Double transformer blocks (8 blocks, higher impact)
+- single_0-23: Single transformer blocks (24 blocks, lower impact)
+
+Supports strength scheduling format: 0:.2,.5:.8,1:1.0""",
+        "architecture": "FLUX_KLEIN",
+        "blocks": [f"double_{i}" for i in range(8)] + [f"single_{i}" for i in range(24)] + ["other_weights"],
+        "block_labels": ({f"double_{i}": f"Double {i}" for i in range(8)} |
+                        {f"single_{i}": f"Single {i}" for i in range(24)} |
+                        {"other_weights": "Other Weights"}),
+        "presets": {
+            "Default": {"enabled": "ALL", "strength": 1.0},
+            "All Off": {"enabled": [], "strength": 0.0},
+            "Half Strength": {"enabled": "ALL", "strength": 0.5},
+            "Double Blocks Only": {"enabled": [f"double_{i}" for i in range(8)] + ["other_weights"], "strength": 1.0},
+            "Single Blocks Only": {"enabled": [f"single_{i}" for i in range(24)] + ["other_weights"], "strength": 1.0},
+            "High Impact Double": {"enabled": [f"double_{i}" for i in range(4, 8)], "strength": 1.0},
+            "Face Focus": {"enabled": ["double_4", "double_7", "single_7", "single_12", "single_16", "single_20"], "strength": 1.0},
+            "Style Only (No Face)": {"enabled": [b for b in [f"double_{i}" for i in range(8)] + [f"single_{i}" for i in range(24)]
+                                                 if b not in ["double_4", "double_7", "single_7", "single_12", "single_16", "single_20"]], "strength": 1.0},
+            "Evens Only": {"enabled": [f"double_{i}" for i in range(0, 8, 2)] + [f"single_{i}" for i in range(0, 24, 2)], "strength": 1.0},
+            "Odds Only": {"enabled": [f"double_{i}" for i in range(1, 8, 2)] + [f"single_{i}" for i in range(1, 24, 2)], "strength": 1.0},
             "Custom": None,
         },
     },

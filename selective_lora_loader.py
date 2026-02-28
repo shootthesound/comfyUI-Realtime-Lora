@@ -185,6 +185,28 @@ ZIMAGE_PRESETS = {
     "Custom": None,  # Use individual toggles
 }
 
+# FLUX 2 Klein block presets - 8 double blocks (0-7) + 24 single blocks (0-23) = 32 total
+# Covers both flux-2-klein-9b (distilled) and flux-2-klein-base-9b - same architecture
+FLUX_KLEIN_ALL_BLOCKS = (
+    {f"double_{i}" for i in range(8)} |
+    {f"single_{i}" for i in range(24)}
+)
+FLUX_KLEIN_FACE_BLOCKS = {"double_4", "double_7", "single_7", "single_12", "single_16", "single_20"}
+FLUX_KLEIN_STYLE_BLOCKS = FLUX_KLEIN_ALL_BLOCKS - FLUX_KLEIN_FACE_BLOCKS
+
+FLUX_KLEIN_PRESETS = {
+    "All Blocks": FLUX_KLEIN_ALL_BLOCKS.copy(),
+    "All Off": set(),
+    "Double Blocks Only": {f"double_{i}" for i in range(8)},
+    "Single Blocks Only": {f"single_{i}" for i in range(24)},
+    "High Impact Double": {f"double_{i}" for i in range(4, 8)},
+    "Face Focus": FLUX_KLEIN_FACE_BLOCKS.copy(),
+    "Style Only (No Face)": FLUX_KLEIN_STYLE_BLOCKS.copy(),
+    "Evens Only": {f"double_{i}" for i in range(0, 8, 2)} | {f"single_{i}" for i in range(0, 24, 2)},
+    "Odds Only": {f"double_{i}" for i in range(1, 8, 2)} | {f"single_{i}" for i in range(1, 24, 2)},
+    "Custom": None,
+}
+
 # FLUX block presets - 19 double blocks (0-18) + 38 single blocks (0-37) = 57 total
 FLUX_ALL_BLOCKS = (
     {f"double_{i}" for i in range(19)} |
@@ -1074,10 +1096,167 @@ TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA
         return {"ui": {"analysis_json": [analysis_json or ""]}, "result": (model_lora, clip_lora, info)}
 
 
+class FLUXKleinSelectiveLoRALoader:
+    """
+    Selective LoRA Loader for FLUX 2 Klein 9B models.
+
+    Covers both flux-2-klein-9b (distilled) and flux-2-klein-base-9b - same block architecture.
+    Toggle individual blocks on/off to control which parts of the LoRA are applied.
+    Use the LoRA Analyzer first to see which blocks have the most impact.
+
+    Block Guide (32 total):
+    - double_0-7: Double transformer blocks (8 blocks, higher impact)
+    - single_0-23: Single transformer blocks (24 blocks, lower impact)
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        inputs = {
+            "required": {
+                "model": ("MODEL",),
+                "clip": ("CLIP",),
+                "lora_name": (folder_paths.get_filename_list("loras"), {
+                    "tooltip": "FLUX 2 Klein LoRA file to load"
+                }),
+                "strength": ("FLOAT", {
+                    "default": 1.0,
+                    "min": -2.0,
+                    "max": 2.0,
+                    "step": 0.05,
+                    "tooltip": "Overall LoRA strength"
+                }),
+                "preset": (list(FLUX_KLEIN_PRESETS.keys()), {
+                    "default": "All Blocks",
+                    "tooltip": "Quick preset selection. Choose 'Custom' to use individual toggles below."
+                }),
+            },
+        }
+
+        # Add double block toggles and strengths (0-7)
+        for i in range(8):
+            inputs["required"][f"double_{i}"] = ("BOOLEAN", {"default": True})
+            inputs["required"][f"double_{i}_str"] = ("FLOAT", {
+                "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05
+            })
+
+        # Add single block toggles and strengths (0-23)
+        for i in range(24):
+            inputs["required"][f"single_{i}"] = ("BOOLEAN", {"default": True})
+            inputs["required"][f"single_{i}_str"] = ("FLOAT", {
+                "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05
+            })
+
+        # Other weights (keys not matching known blocks)
+        inputs["required"]["other_weights"] = ("BOOLEAN", {"default": True})
+        inputs["required"]["other_weights_str"] = ("FLOAT", {
+            "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05
+        })
+
+        inputs["optional"] = {
+            "lora_path_opt": ("STRING", {"forceInput": True, "tooltip": "Optional: Connect from LoRA Analyzer to use its selected LoRA"}),
+            "analysis_json": ("STRING", {"forceInput": True, "tooltip": "Optional: Connect from LoRA Analyzer for impact-colored checkboxes"}),
+        }
+
+        return inputs
+
+    RETURN_TYPES = ("MODEL", "CLIP", "STRING")
+    RETURN_NAMES = ("model", "clip", "info")
+    OUTPUT_NODE = True
+    FUNCTION = "load_lora"
+    CATEGORY = "loaders/lora"
+    DESCRIPTION = """Selective LoRA loader for FLUX 2 Klein 9B. Toggle blocks on/off.
+Works with both flux-2-klein-9b (distilled) and flux-2-klein-base-9b.
+
+TIP: Use 'LoRA Loader + Analyzer' first to see which blocks matter for your LoRA.
+Double blocks (0-7) typically have more impact than single blocks (0-23)."""
+
+    def load_lora(self, model, clip, lora_name, strength, preset, **kwargs):
+        lora_path_opt = kwargs.get("lora_path_opt")
+        analysis_json = kwargs.get("analysis_json")
+
+        self._analysis_json = analysis_json
+
+        if preset != "Custom":
+            enabled_blocks = FLUX_KLEIN_PRESETS[preset].copy()
+            block_strengths = {b: 1.0 for b in enabled_blocks}
+            other_enabled = preset != "All Off"
+            other_str = 1.0
+            using_preset = preset
+        else:
+            enabled_blocks = set()
+            block_strengths = {}
+            for i in range(8):
+                block_id = f"double_{i}"
+                if kwargs.get(block_id, True):
+                    enabled_blocks.add(block_id)
+                    block_strengths[block_id] = kwargs.get(f"{block_id}_str", 1.0)
+            for i in range(24):
+                block_id = f"single_{i}"
+                if kwargs.get(block_id, True):
+                    enabled_blocks.add(block_id)
+                    block_strengths[block_id] = kwargs.get(f"{block_id}_str", 1.0)
+            other_enabled = kwargs.get("other_weights", True)
+            other_str = kwargs.get("other_weights_str", 1.0)
+            using_preset = None
+
+        if lora_path_opt and os.path.exists(lora_path_opt):
+            lora_path = lora_path_opt
+        else:
+            lora_path = folder_paths.get_full_path("loras", lora_name)
+        if not lora_path or not os.path.exists(lora_path):
+            return (model, clip, "Error: LoRA not found")
+
+        if lora_path.endswith('.safetensors'):
+            lora_state_dict = load_file(lora_path)
+        else:
+            lora_state_dict = torch.load(lora_path, map_location='cpu')
+
+        filtered_dict = {}
+        for key, value in lora_state_dict.items():
+            block_id = _extract_block_id_flux(key)
+            if block_id in enabled_blocks:
+                blk_str = block_strengths.get(block_id, 1.0)
+                filtered_dict[key] = value * blk_str if blk_str != 1.0 else value
+            elif block_id == 'other' and other_enabled:
+                filtered_dict[key] = value * other_str if other_str != 1.0 else value
+
+        original_count = len(lora_state_dict)
+        filtered_count = len(filtered_dict)
+
+        if filtered_count == 0:
+            return {"ui": {"analysis_json": [analysis_json or ""]}, "result": (model, clip, "Warning: All blocks disabled, no LoRA applied")}
+
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(
+            model, clip, filtered_dict, strength, strength
+        )
+
+        all_blocks = [f"double_{i}" for i in range(8)] + [f"single_{i}" for i in range(24)]
+        disabled = [b for b in all_blocks if b not in enabled_blocks]
+        scaled = [f"{b}={block_strengths[b]:.2f}" for b in enabled_blocks if block_strengths.get(b, 1.0) != 1.0]
+
+        info = f"Loaded {filtered_count}/{original_count} tensors\n"
+        info += f"Preset: {using_preset}\n" if using_preset else "Preset: Custom\n"
+        info += f"Enabled: {len(enabled_blocks)}/32 blocks\n"
+        if scaled:
+            info += f"Scaled: {', '.join(scaled)}\n"
+        if disabled:
+            disabled_double = [b for b in disabled if b.startswith("double_")]
+            disabled_single = [b for b in disabled if b.startswith("single_")]
+            if disabled_double:
+                info += f"Disabled double: {', '.join(b.replace('double_', '') for b in disabled_double)}\n"
+            if disabled_single:
+                info += f"Disabled single: {', '.join(b.replace('single_', '') for b in disabled_single)}"
+        else:
+            info += "All blocks enabled"
+
+        return {"ui": {"analysis_json": [analysis_json or ""]}, "result": (model_lora, clip_lora, info)}
+
+
 NODE_CLASS_MAPPINGS = {
     "SDXLSelectiveLoRALoader": SDXLSelectiveLoRALoader,
     "ZImageSelectiveLoRALoader": ZImageSelectiveLoRALoader,
     "FLUXSelectiveLoRALoader": FLUXSelectiveLoRALoader,
+    "FLUXKleinSelectiveLoRALoader": FLUXKleinSelectiveLoRALoader,
     "WanSelectiveLoRALoader": WanSelectiveLoRALoader,
     "QwenSelectiveLoRALoader": QwenSelectiveLoRALoader,
 }
@@ -1086,6 +1265,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SDXLSelectiveLoRALoader": "Selective LoRA Loader (SDXL)",
     "ZImageSelectiveLoRALoader": "Selective LoRA Loader (Z-Image)",
     "FLUXSelectiveLoRALoader": "Selective LoRA Loader (FLUX)",
+    "FLUXKleinSelectiveLoRALoader": "Selective LoRA Loader (FLUX 2 Klein)",
     "WanSelectiveLoRALoader": "Selective LoRA Loader (Wan)",
     "QwenSelectiveLoRALoader": "Selective LoRA Loader (Qwen)",
 }

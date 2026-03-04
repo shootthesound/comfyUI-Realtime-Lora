@@ -710,7 +710,8 @@ def _extract_block_id_v2(key: str, architecture: str) -> str:
 
     elif architecture == 'ZIMAGE':
         # AI-Toolkit format: diffusion_model.layers.N.attention/adaLN_modulation
-        match = re.search(r'diffusion_model\.layers\.(\d+)', key)
+        # SimpleTuner comfyui format: diffusion_model.transformer.layers.N (Lumina2 preserves transformer prefix)
+        match = re.search(r'diffusion_model\.(?:transformer\.)?layers\.(\d+)', key)
         if match:
             return f"layer_{match.group(1)}"
         # Musubi Tuner format: lora_unet_layers_N_attention_...

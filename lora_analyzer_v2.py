@@ -782,7 +782,10 @@ def _extract_block_id_v2(key: str, architecture: str) -> str:
         if double:
             return f"double_{double.group(1)}"
 
-        return 'other_weights'
+        # Catch-all bucket. Must be 'other' (not 'other_weights') so it matches the
+        # `if block_id == 'other'` branch in _filter_lora_by_blocks and is gated by the
+        # 'other_weights' toggle/strength — same as every other architecture.
+        return 'other'
 
     elif architecture in ['SDXL', 'SD15']:
         # Text encoders. Both kohya-style (`lora_te1_*`/`lora_te2_*`) and
@@ -1547,7 +1550,7 @@ def _create_combined_node_class(config: dict):
             else:
                 lora_path = folder_paths.get_full_path("loras", lora_name)
             if not lora_path or not os.path.exists(lora_path):
-                return {"ui": {"analysis_json": ["{}"]}, "result": (model, clip, "Error: LoRA file not found", "{}", None)}
+                return {"ui": {"analysis_json": ["{}"]}, "result": (model, positive, negative, "Error: LoRA file not found", "{}")}
 
             print(f"[{cfg['display_name']}] Loading: {lora_name}")
 

@@ -17,6 +17,9 @@ __pycache__/
 # Claude Code
 .claude/
 
+# Internal tech docs (not for the public repo)
+V2_NODES_TECH_SPEC.md
+
 # IDE
 .vscode/
 .idea/

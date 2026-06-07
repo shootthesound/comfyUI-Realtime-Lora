@@ -656,7 +656,7 @@ class Qwen3_8BTextEncoderDebiaser:
         # Embedding
         inputs["required"]["embed_tokens"] = ("BOOLEAN", {"default": True})
         inputs["required"]["embed_tokens_str"] = ("FLOAT", {
-            "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+            "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
         })
 
         # Main layers — 5 subs each
@@ -665,13 +665,13 @@ class Qwen3_8BTextEncoderDebiaser:
                 block_id = f"l{i}_{sub}"
                 inputs["required"][block_id] = ("BOOLEAN", {"default": True})
                 inputs["required"][f"{block_id}_str"] = ("FLOAT", {
-                    "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                    "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 })
 
         # Final norm
         inputs["required"]["final_norm"] = ("BOOLEAN", {"default": True})
         inputs["required"]["final_norm_str"] = ("FLOAT", {
-            "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+            "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
         })
 
         return inputs

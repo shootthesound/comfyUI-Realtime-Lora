@@ -176,7 +176,7 @@ app.registerExtension({
 
         nodeType.prototype._makeCombined = function (toggle, strength, name) {
             const M = 8, CB = 13, GAP = 5, LW = 155, VW = 36;
-            const MIN = -2.0, MAX = 2.0, STEP = 0.05;
+            const MIN = -5.0, MAX = 5.0, STEP = 0.05;
 
             toggle.draw = function (ctx, node, ww, y, wh) {
                 const SW = ww - M - CB - GAP - LW - GAP - VW - M - GAP;

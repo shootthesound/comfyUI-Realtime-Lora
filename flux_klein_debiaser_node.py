@@ -694,7 +694,7 @@ class FluxKleinDeepDebiaser:
                 "default": True, "tooltip": info["tip"],
             })
             inputs["required"][f"{bid}_str"] = ("FLOAT", {
-                "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 "tooltip": f"Strength: {info['label']}",
             })
 
@@ -704,7 +704,7 @@ class FluxKleinDeepDebiaser:
                 "default": True, "tooltip": info["tip"],
             })
             inputs["required"][f"{bid}_str"] = ("FLOAT", {
-                "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 "tooltip": f"Strength: {info['label']}",
             })
 
@@ -714,7 +714,7 @@ class FluxKleinDeepDebiaser:
                 "default": True, "tooltip": info["tip"],
             })
             inputs["required"][f"{bid}_str"] = ("FLOAT", {
-                "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 "tooltip": f"Strength: {info['label']}",
             })
 

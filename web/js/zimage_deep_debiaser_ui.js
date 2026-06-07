@@ -265,7 +265,7 @@ app.registerExtension({
 
             toggle.sliderInfo = {
                 margin: 10, checkboxSize: 14, labelWidth: 115, valueWidth: 38, gap: 6,
-                min: -2.0, max: 2.0, step: 0.01,
+                min: -5.0, max: 5.0, step: 0.01,
                 getLayout: function(widgetWidth) {
                     const sliderWidth = widgetWidth - this.margin - this.checkboxSize - this.gap - this.labelWidth - this.gap - this.valueWidth - this.margin - this.gap;
                     const checkboxX = this.margin;

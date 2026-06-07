@@ -563,7 +563,7 @@ class ZImageDeepDebiaser:
         for block in EMBED_BLOCKS:
             inputs["required"][block] = ("BOOLEAN", {"default": True})
             inputs["required"][f"{block}_str"] = ("FLOAT", {
-                "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
             })
 
         # Context refiners — 4 subs each
@@ -572,7 +572,7 @@ class ZImageDeepDebiaser:
                 block_id = f"cr{i}_{sub}"
                 inputs["required"][block_id] = ("BOOLEAN", {"default": True})
                 inputs["required"][f"{block_id}_str"] = ("FLOAT", {
-                    "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                    "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 })
 
         # Main layers — 5 subs each
@@ -581,7 +581,7 @@ class ZImageDeepDebiaser:
                 block_id = f"l{i}_{sub}"
                 inputs["required"][block_id] = ("BOOLEAN", {"default": True})
                 inputs["required"][f"{block_id}_str"] = ("FLOAT", {
-                    "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                    "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 })
 
         # Noise refiners — 5 subs each
@@ -590,13 +590,13 @@ class ZImageDeepDebiaser:
                 block_id = f"nr{i}_{sub}"
                 inputs["required"][block_id] = ("BOOLEAN", {"default": True})
                 inputs["required"][f"{block_id}_str"] = ("FLOAT", {
-                    "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+                    "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
                 })
 
         # Final layer
         inputs["required"]["final_layer"] = ("BOOLEAN", {"default": True})
         inputs["required"]["final_layer_str"] = ("FLOAT", {
-            "default": 1.0, "min": -2.0, "max": 2.0, "step": 0.05,
+            "default": 1.0, "min": -5.0, "max": 5.0, "step": 0.05,
         })
 
         return inputs

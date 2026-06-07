@@ -1091,6 +1091,12 @@ class LoRALoaderWithAnalysisV2:
                     "tooltip": "LoRA strength for CLIP text encoder"
                 }),
             },
+            "optional": {
+                "lora_path_opt": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": "Optional: override the LoRA dropdown with a file path (e.g. from a LoRA-manager / lora-stack node that outputs a path)."
+                }),
+            },
         }
 
     RETURN_TYPES = ("MODEL", "CLIP", "STRING", "STRING", "STRING")
@@ -1107,8 +1113,11 @@ class LoRALoaderWithAnalysisV2:
     OUTPUT_NODE = True
     DESCRIPTION = "V2 analyzer with improved detection using metadata, scoring, and block counting."
 
-    def load_lora_with_analysis(self, model, clip, lora_name, strength_model, strength_clip):
-        lora_path = folder_paths.get_full_path("loras", lora_name)
+    def load_lora_with_analysis(self, model, clip, lora_name, strength_model, strength_clip, lora_path_opt=None):
+        if lora_path_opt and os.path.exists(lora_path_opt):
+            lora_path = lora_path_opt
+        else:
+            lora_path = folder_paths.get_full_path("loras", lora_name)
         if not lora_path or not os.path.exists(lora_path):
             return (model, clip, "Error: LoRA file not found", "{}", "")
 

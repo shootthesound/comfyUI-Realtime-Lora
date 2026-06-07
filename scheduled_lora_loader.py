@@ -268,6 +268,10 @@ class ScheduledLoRALoader:
                 }),
             },
             "optional": {
+                "lora_path_opt": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": "Optional: override the LoRA dropdown with a file path (e.g. from a LoRA-manager / lora-stack node that outputs a path)."
+                }),
                 "schedule_in": ("STRING", {
                     "forceInput": True,
                     "tooltip": "Schedule input from another node (overrides preset/text field)"
@@ -300,12 +304,15 @@ Chain multiple loaders using schedule_out → schedule_in.
 Use schedule_inv for complementary LoRA pairs (crossfade effect)."""
 
     def load_lora(self, model, positive, negative, lora_name, strength,
-                  schedule_preset="Custom", strength_schedule="", schedule_in=None):
+                  schedule_preset="Custom", strength_schedule="", schedule_in=None, lora_path_opt=None):
 
-        # Get LoRA path
-        lora_path = folder_paths.get_full_path("loras", lora_name)
+        # Get LoRA path (an optional path override takes precedence over the dropdown)
+        if lora_path_opt and os.path.exists(lora_path_opt):
+            lora_path = lora_path_opt
+        else:
+            lora_path = folder_paths.get_full_path("loras", lora_name)
         if not lora_path or not os.path.exists(lora_path):
-            print(f"[ScheduledLoRALoader] Error: LoRA not found: {lora_name}")
+            print(f"[ScheduledLoRALoader] Error: LoRA not found: {lora_name or lora_path_opt}")
             return (model, positive, negative, "", "")
 
         print(f"[ScheduledLoRALoader] Loading: {lora_name}")

@@ -395,10 +395,12 @@ def _detect_from_metadata(metadata: dict) -> str:
     # Check modelspec.architecture (newer LoRAs)
     arch = metadata.get('modelspec.architecture', '').lower()
 
-    # Check for FLUX Klein variants first (before generic FLUX)
-    if 'klein-4b' in arch or 'klein_4b' in arch:
+    # Check for FLUX Klein variants first (before generic FLUX). Match loosely on
+    # "klein" + size so the distilled and base variants both resolve, e.g.
+    # flux-2-klein-9b AND flux-2-klein-base-9b.
+    if 'klein' in arch and '4b' in arch:
         return 'FLUX_KLEIN_4B'
-    if 'klein-9b' in arch or 'klein_9b' in arch:
+    if 'klein' in arch and '9b' in arch:
         return 'FLUX_KLEIN_9B'
     if 'flux' in arch:
         return 'FLUX'
@@ -409,10 +411,10 @@ def _detect_from_metadata(metadata: dict) -> str:
 
     # Check ss_base_model_version (Kohya format)
     base_model = metadata.get('ss_base_model_version', '').lower()
-    # Check Klein variants first
-    if 'flux_2_klein_4b' in base_model or 'flux-2-klein-4b' in base_model:
+    # Check Klein variants first (loose match catches *-klein-base-9b etc.)
+    if 'klein' in base_model and '4b' in base_model:
         return 'FLUX_KLEIN_4B'
-    if 'flux_2_klein_9b' in base_model or 'flux-2-klein-9b' in base_model:
+    if 'klein' in base_model and '9b' in base_model:
         return 'FLUX_KLEIN_9B'
     if 'sdxl' in base_model:
         return 'SDXL'

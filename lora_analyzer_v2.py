@@ -861,20 +861,21 @@ def _sdxl_diffusers_to_comfy_bucket(key_lower: str):
     if m:
         level, idx = int(m.group(1)), int(m.group(2))
         if level == 0:
-            # Level 0 has no attention; resnets map to input_1/2.
-            # The UI doesn't expose input_1/2 toggles for SDXL → these end up
-            # in 'other_weights', which is fine (they're rare in real LoRAs).
-            return f"input_{1 + idx}" if idx in (0, 1) else None
+            # Level 0 has no attention and no exposed toggle (would be input_1/2).
+            # Return None so these fall through to the 'other' bucket (kept /
+            # controlled by the other_weights toggle) instead of being DROPPED by
+            # _filter_lora_by_blocks (which only keeps 'other' or enabled toggles).
+            return None
         if level == 1:
             return f"input_{4 + idx}" if idx in (0, 1) else None
         if level == 2:
             return f"input_{7 + idx}" if idx in (0, 1) else None
 
-    # Down blocks — downsamplers
+    # Down blocks — downsamplers (would be input_3/input_6 — not exposed as
+    # toggles). Return None so they land in 'other' rather than being dropped.
     m = re.search(r'down_blocks?[._](\d+)[._]?downsamplers', key_lower)
     if m:
-        level = int(m.group(1))
-        return {0: 'input_3', 1: 'input_6'}.get(level)
+        return None
 
     # Mid block — single attention + resnets
     if 'mid_block' in key_lower:
@@ -889,7 +890,9 @@ def _sdxl_diffusers_to_comfy_bucket(key_lower: str):
         if level == 1:
             return f"output_{3 + idx}" if idx in (0, 1, 2) else None
         if level == 2:
-            return f"output_{6 + idx}" if idx in (0, 1, 2) else None
+            # up level 2 = output_6/7/8 (resnets only, no exposed toggle).
+            # None -> 'other' bucket rather than being dropped by the filter.
+            return None
 
     # Up blocks — upsamplers (fold into the last block at each level)
     m = re.search(r'up_blocks?[._](\d+)[._]?upsamplers', key_lower)

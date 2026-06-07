@@ -279,16 +279,30 @@ app.registerExtension({
                     return true;
                 }
 
-                if (lx >= sliderX - 4 && lx <= sliderX + SW + 4) {
-                    if (event.type === "pointerdown" || event.type === "pointermove") {
-                        let n = Math.max(0, Math.min(1, (lx - sliderX) / SW));
-                        let v = MIN + n * (MAX - MIN);
+                // Slider drag — RELATIVE / anchored. Grabbing the track anchors at the
+                // current value instead of jumping to the cursor (the jump-to-click +
+                // drag-all-the-way-to-the-edge behaviour was the #42 complaint). You then
+                // adjust from where you grabbed, so small drags give fine control and you
+                // never have to drag to the track edge to reach min/max.
+                if (event.type === "pointerdown" && lx >= sliderX - 4 && lx <= sliderX + SW + 4) {
+                    toggle._strDrag = { x: lx, v: parseFloat(strength.value) || 0 };
+                    return true;
+                }
+                if (event.type === "pointermove" && toggle._strDrag) {
+                    if (event.buttons === 0) {
+                        toggle._strDrag = null;            // button released off-widget
+                    } else {
+                        let v = toggle._strDrag.v + ((lx - toggle._strDrag.x) / SW) * (MAX - MIN);
                         v = Math.round(v / STEP) * STEP;
                         v = Math.max(MIN, Math.min(MAX, v));
                         strength.value = v;
                         node.setDirtyCanvas(true);
                         return true;
                     }
+                }
+                if (event.type === "pointerup" && toggle._strDrag) {
+                    toggle._strDrag = null;
+                    return true;
                 }
 
                 if (origMouse) return origMouse(event, pos, node);

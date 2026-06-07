@@ -278,16 +278,29 @@ app.registerExtension({
                     return true;
                 }
 
-                if (localX >= layout.sliderX - 5 && localX <= layout.sliderX + layout.sliderWidth + 5) {
-                    if (event.type === "pointerdown" || event.type === "pointermove") {
-                        let normalized = Math.max(0, Math.min(1, (localX - layout.sliderX) / layout.sliderWidth));
-                        let newStr = toggle.sliderInfo.min + normalized * (toggle.sliderInfo.max - toggle.sliderInfo.min);
+                // Slider drag — RELATIVE / anchored (matches the flux_klein debiaser, #42).
+                // Grab at the current value instead of jumping to the cursor; adjust from
+                // the grab point so small drags give fine control and you never have to
+                // drag to the track edge to reach min/max.
+                if (event.type === "pointerdown" && localX >= layout.sliderX - 5 && localX <= layout.sliderX + layout.sliderWidth + 5) {
+                    toggle._strDrag = { x: localX, v: parseFloat(strength.value) || 0 };
+                    return true;
+                }
+                if (event.type === "pointermove" && toggle._strDrag) {
+                    if (event.buttons === 0) {
+                        toggle._strDrag = null;
+                    } else {
+                        let newStr = toggle._strDrag.v + ((localX - toggle._strDrag.x) / layout.sliderWidth) * (toggle.sliderInfo.max - toggle.sliderInfo.min);
                         newStr = Math.round(newStr / toggle.sliderInfo.step) * toggle.sliderInfo.step;
                         newStr = Math.max(toggle.sliderInfo.min, Math.min(toggle.sliderInfo.max, newStr));
                         strength.value = newStr;
                         node.setDirtyCanvas(true);
                         return true;
                     }
+                }
+                if (event.type === "pointerup" && toggle._strDrag) {
+                    toggle._strDrag = null;
+                    return true;
                 }
                 if (originalMouse) return originalMouse(event, pos, node);
                 return false;

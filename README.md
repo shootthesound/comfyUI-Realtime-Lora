@@ -368,10 +368,6 @@ Workflows are included in the `workflows/` folder, organized by category.
 - `Model Layer Editor - Zimage.json` - Base model editing demo
 - `Save Lora from Multiple Editors Demo.json` - LoRA extraction, merging, and compression
 
-**Utility Workflows** (root `workflows/` folder):
-- `Clippy Reloaded - image from clipboard - zimage.json` - Clipboard loading demo
-- `Image of the Day Node - Z-Image.json` - Random image inspiration demo
-
 ## Features
 
 - Train from 1 to 100+ images

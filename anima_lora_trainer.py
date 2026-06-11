@@ -718,7 +718,6 @@ class AnimaLoraTrainer:
                 steps=training_steps,
                 learning_rate=learning_rate,
                 lora_rank=lora_rank,
-                lora_alpha=lora_rank,  # alpha = rank for full strength training
                 resolution=preset["resolution"],
                 batch_size=preset["batch_size"],
                 optimizer=preset["optimizer"],

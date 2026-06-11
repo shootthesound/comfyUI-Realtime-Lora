@@ -19,7 +19,7 @@ def generate_anima_training_config(
     steps: int = 500,
     learning_rate: float = 0.0001,
     lora_rank: int = 16,
-    lora_alpha: int = 16,
+    lora_alpha: int = 1,
     resolution: int = 1024,
     batch_size: int = 1,
     optimizer: str = "AdamW8bit",
@@ -57,6 +57,7 @@ def generate_anima_training_config(
 [general]
 enable_bucket = true
 bucket_no_upscale = true
+max_bucket_reso = 2048
 
 [model]
 pretrained_model_name_or_path = "{ckpt_path_escaped}"

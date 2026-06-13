@@ -13,7 +13,7 @@
 
 | Backend | Models | Best For |
 |---------|--------|----------|
-| **sd-scripts** | SDXL, SD 1.5 | Fast training, mature workflows, broad checkpoint compatibility |
+| **sd-scripts** | SDXL, SD 1.5, Anima | Fast training, mature workflows, broad checkpoint compatibility |
 | **Musubi Tuner** | Z-Image, Z-Image Base, FLUX Klein 4B/9B, Qwen Image, Qwen Image Edit, Wan 2.2 | Cutting-edge models, smaller LoRAs, excellent VRAM efficiency |
 | **AI-Toolkit** | FLUX.1-dev, Z-Image, Wan 2.2 alternative training pipeline |
 
@@ -114,6 +114,7 @@ This node trains LoRAs on-the-fly from your images without leaving ComfyUI. SDXL
 **Via Kohya sd-scripts:**
 - SDXL (any checkpoint) - tested with Juggernaut XL Ragnarok, base SDXL will work too
 - SD 1.5 (any checkpoint) - blazingly fast, ~2 mins for 500 steps on a 5090
+- Anima (any checkpoint) - new anime/art model
 
 **Via Musubi Tuner:**
 - Z-Image - faster training, smaller LoRA files, no diffusers dependency. Requires the de-distilled model for training, but trained LoRAs work with the regular distilled Z-Image Turbo model.

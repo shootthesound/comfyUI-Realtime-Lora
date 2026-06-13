@@ -213,6 +213,12 @@ class AnimaLoraTrainer:
         # Model dropdowns from ComfyUI folders
         # Get list of checkpoints from ComfyUI
         checkpoints = folder_paths.get_filename_list("checkpoints")
+        try:
+            diffusion_models = folder_paths.get_filename_list("diffusion_models")
+        except:
+            diffusion_models = []
+
+        diffusion_models = sorted(set(checkpoints) | set(diffusion_models))
 
         vae_models = folder_paths.get_filename_list("vae")
         try:
@@ -256,9 +262,11 @@ class AnimaLoraTrainer:
                         "tooltip": "Path to kohya sd-scripts installation. Must be a recent version with Anima support (anima_train_network.py).",
                     },
                 ),
-                "ckpt_name": (
-                    checkpoints,
-                    {"tooltip": "Anima model (.safetensors) from models/checkpoints."},
+                "diffusion_model_name": (
+                    diffusion_models,
+                    {
+                        "tooltip": "Anima model (.safetensors) from models/diffusion_models."
+                    },
                 ),
                 "vae_name": (
                     vae_models,
@@ -457,7 +465,7 @@ class AnimaLoraTrainer:
         inputcount,
         images_path,
         sd_scripts_path,
-        ckpt_name,
+        diffusion_model_name,
         vae_name,
         text_encoder_name,
         caption,
@@ -481,7 +489,9 @@ class AnimaLoraTrainer:
 
         # Resolve model paths
         sd_scripts_path = os.path.expanduser(sd_scripts_path.strip())
-        ckpt_path = folder_paths.get_full_path("checkpoints", ckpt_name)
+        diffusion_model_name_path = folder_paths.get_full_path(
+            "diffusion_models", diffusion_model_name
+        ) or folder_paths.get_full_path("checkpoints", diffusion_model_name)
         vae_path = folder_paths.get_full_path("vae", vae_name)
         qwen3_path = self._resolve_text_encoder_path(text_encoder_name)
 
@@ -551,7 +561,7 @@ class AnimaLoraTrainer:
         num_images = len(folder_images) if use_folder_path else len(all_images)
         print(f"[Anima LoRA] Training with {num_images} image(s)")
         print(
-            f"[Anima LoRA] Checkpoint: {ckpt_name} | VAE: {vae_name} | Qwen3: {text_encoder_name}"
+            f"[Anima LoRA] Diffusion Model: {diffusion_model_name} | VAE: {vae_name} | Qwen3: {text_encoder_name}"
         )
 
         # Get VRAM preset settings
@@ -571,8 +581,12 @@ class AnimaLoraTrainer:
                 f"anima_train_network.py not found at: {train_script}\n"
                 f"Your sd-scripts installation may be too old. Update sd-scripts (main branch) to get Anima support."
             )
-        if not ckpt_path or not os.path.exists(ckpt_path):
-            raise FileNotFoundError(f"Anima model not found at: {ckpt_path}")
+        if not diffusion_model_name_path or not os.path.exists(
+            diffusion_model_name_path
+        ):
+            raise FileNotFoundError(
+                f"Anima model not found at: {diffusion_model_name_path}"
+            )
         if not vae_path or not os.path.exists(vae_path):
             raise FileNotFoundError(f"Qwen-Image VAE not found at: {vae_path}")
         if not qwen3_path or not os.path.exists(qwen3_path):
@@ -585,7 +599,7 @@ class AnimaLoraTrainer:
         global _anima_config
         _anima_config["sd_scripts_path"] = sd_scripts_path
         _anima_config["trainer_settings"] = {
-            "ckpt_name": ckpt_name,
+            "diffusion_model_name": diffusion_model_name,
             "vae_name": vae_name,
             "text_encoder_name": text_encoder_name,
             "caption": caption,
@@ -606,9 +620,7 @@ class AnimaLoraTrainer:
         _save_anima_config()
 
         # Compute hash for caching
-        extra = (
-            f"{ckpt_name}|{timestep_sampling}|{discrete_flow_shift}|{train_llm_adapter}"
-        )
+        extra = f"{diffusion_model_name}|{timestep_sampling}|{discrete_flow_shift}|{train_llm_adapter}"
         if use_folder_path:
             image_hash = _compute_image_hash(
                 folder_images,
@@ -712,7 +724,7 @@ class AnimaLoraTrainer:
                 name=run_name,
                 image_folder=temp_dir,  # Parent of the class folder
                 output_folder=output_folder,
-                ckpt_path=ckpt_path,
+                diffusion_model_path=diffusion_model_name_path,
                 qwen3_path=qwen3_path,
                 vae_path=vae_path,
                 steps=training_steps,
@@ -787,7 +799,7 @@ class AnimaLoraTrainer:
                     f"sd-scripts Anima training failed with code {process.returncode}"
                 )
 
-            print(f"[Anima LoRA] Training completed!")
+            print("[Anima LoRA] Training completed!")
 
             # List intermediate checkpoints (epoch: {name}-000001, steps: {name}-step00000100)
             checkpoint_files = sorted(
@@ -808,15 +820,15 @@ class AnimaLoraTrainer:
                 if checkpoint_files:
                     lora_output_path = os.path.join(output_folder, checkpoint_files[-1])
                     print(
-                        f"[Anima LoRA] Final file missing, using newest checkpoint instead."
+                        "[Anima LoRA] Final file missing, using newest checkpoint instead."
                     )
                 else:
                     raise FileNotFoundError(f"No LoRA file found in {output_folder}")
 
             print(f"[Anima LoRA] Found trained LoRA: {lora_output_path}")
             print(
-                f"[Anima LoRA] Note: LoRAs load directly in ComfyUI. If you trained text encoder or "
-                f"LLM adapter weights, convert with networks/convert_anima_lora_to_comfy.py from sd-scripts."
+                "[Anima LoRA] Note: LoRAs load directly in ComfyUI. If you trained text encoder or "
+                "LLM adapter weights, convert with networks/convert_anima_lora_to_comfy.py from sd-scripts."
             )
 
             # Handle caching

@@ -13,7 +13,7 @@ def generate_anima_training_config(
     name: str,
     image_folder: str,
     output_folder: str,
-    ckpt_path: str,
+    diffusion_model_path: str,
     qwen3_path: str,
     vae_path: str,
     steps: int = 500,
@@ -45,7 +45,7 @@ def generate_anima_training_config(
     """
 
     # Escape backslashes for TOML on Windows
-    ckpt_path_escaped = ckpt_path.replace("\\", "/")
+    diffusion_model_path_escaped = diffusion_model_path.replace("\\", "/")
     qwen3_path_escaped = qwen3_path.replace("\\", "/")
     vae_path_escaped = vae_path.replace("\\", "/")
     image_folder_escaped = image_folder.replace("\\", "/")
@@ -60,7 +60,7 @@ bucket_no_upscale = true
 max_bucket_reso = 2048
 
 [model]
-pretrained_model_name_or_path = "{ckpt_path_escaped}"
+pretrained_model_name_or_path = "{diffusion_model_path_escaped}"
 qwen3 = "{qwen3_path_escaped}"
 vae = "{vae_path_escaped}"
 

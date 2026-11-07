@@ -29,6 +29,7 @@ from safetensors.torch import load_file, save_file
 from safetensors import safe_open
 
 from .quant_utils import is_quantized_model
+from .moss_lora import MOSS_BLOCKS, MOSS_PRESETS, extract_moss_layer, filter_moss_lora, is_moss_lora
 
 # Path to store per-node config (last used save paths)
 _NODE_CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -191,7 +192,9 @@ def _save_refined_lora(filtered_lora: dict, save_path: str, save_filename: str,
 
     # Prepare metadata
     metadata = {}
-    if original_metadata:
+    if architecture == 'MOSS_IMAGE':
+        metadata.update(original_metadata or {})
+    elif original_metadata:
         # Copy relevant metadata from original
         for key in ['ss_base_model_version', 'ss_network_module', 'ss_network_dim',
                     'ss_network_alpha', 'modelspec.architecture', 'modelspec.title']:
@@ -391,6 +394,10 @@ def _detect_from_metadata(metadata: dict) -> str:
     """Try to detect architecture from safetensors metadata."""
     if not metadata:
         return None
+
+    if any('moss' in metadata.get(key, '').lower() for key in
+           ('modelspec.architecture', 'ss_base_model_version', 'ss_network_module', 'ss_sd_model_name')):
+        return 'MOSS_IMAGE'
 
     # Check modelspec.architecture (newer LoRAs)
     arch = metadata.get('modelspec.architecture', '').lower()
@@ -747,6 +754,9 @@ def _detect_architecture_v2(keys: list, metadata: dict = None) -> tuple:
     """
     num_keys = len(keys)
 
+    if is_moss_lora(keys):
+        return ('MOSS_IMAGE', 'high', 'layer projections')
+
     # Method 1: Try metadata first (most reliable)
     if metadata:
         arch = _detect_from_metadata(metadata)
@@ -785,6 +795,9 @@ def _detect_architecture_v2(keys: list, metadata: dict = None) -> tuple:
 def _extract_block_id_v2(key: str, architecture: str) -> str:
     """Extract block identifier from a LoRA/model weight key."""
     key_lower = key.lower()
+
+    if architecture == 'MOSS_IMAGE':
+        return extract_moss_layer(key)
 
     if architecture == 'QWEN_IMAGE':
         match = re.search(r'transformer_blocks[._](\d+)', key)
@@ -1211,7 +1224,7 @@ class LoRALoaderWithAnalysisV2:
         else:
             lora_path = folder_paths.get_full_path("loras", lora_name)
         if not lora_path or not os.path.exists(lora_path):
-            return (model, clip, "Error: LoRA file not found", "{}", "")
+            return {"ui": {"analysis_json": ["{}"]}, "result": (model, clip, "Error: LoRA file not found", "{}", "")}
 
         print(f"[LoRA Analyzer V2] Loading: {lora_name}")
 
@@ -1253,7 +1266,7 @@ class LoRALoaderWithAnalysisV2:
         print(f"[LoRA Analyzer V2] Found {len(patch_analysis)} blocks with patches")
         print(analysis_text)
 
-        return (model_lora, clip_lora, analysis_text, analysis_json, lora_path)
+        return {"ui": {"analysis_json": [analysis_json]}, "result": (model_lora, clip_lora, analysis_text, analysis_json, lora_path)}
 
 
 # ============================================================================
@@ -1469,6 +1482,18 @@ Supports strength scheduling format: 0:.2,.5:.8,1:1.0""",
             "Custom": None,
         },
     },
+    "MOSS_IMAGE": {
+        "node_id": "MOSSImageAnalyzerSelectiveLoaderV2",
+        "display_name": "MOSS-Image Analyzer + Selective Loader V2",
+        "description": """Analyze and edit LoRA weights for MOSS-Image's 42 main layers.
+Use other_weights for text-refiner, embedding, modulation, and output weights.
+Supports positional/named profiles and strength scheduling.
+Saving bakes in layer weights only. Apply the saved LoRA at the same overall strength.""",
+        "architecture": "MOSS_IMAGE",
+        "blocks": MOSS_BLOCKS,
+        "block_labels": {block: block.replace('_', ' ').title() for block in MOSS_BLOCKS},
+        "presets": MOSS_PRESETS,
+    },
     "MINIMAX_H3": {
         "node_id": "MiniMaxH3AnalyzerSelectiveLoaderV2",
         "display_name": "MiniMax H3 Analyzer + Selective Loader V2",
@@ -1572,6 +1597,8 @@ def _filter_lora_by_blocks(lora_state_dict: dict, enabled_blocks: set, block_str
     For LoKR/LoHa, only scales the first weight matrix (lokr_w1/hada_w1) to avoid
     squaring the strength effect (since these use product decomposition).
     """
+    if architecture == 'MOSS_IMAGE':
+        return filter_moss_lora(lora_state_dict, enabled_blocks, block_strengths, other_enabled, other_strength)
     filtered_dict = {}
 
     # Detect LoRA type once for the whole dict
@@ -1726,7 +1753,7 @@ def _create_combined_node_class(config: dict):
             blocks = cfg["blocks"]
             presets = cfg["presets"]
 
-            if architecture == "MINIMAX_H3":
+            if architecture in ("MINIMAX_H3", "MOSS_IMAGE"):
                 from .selective_lora_loader import _coerce_scalar_strength
                 strength = _coerce_scalar_strength(strength)
 
@@ -1748,6 +1775,9 @@ def _create_combined_node_class(config: dict):
                 lora_state_dict = torch.load(lora_path, map_location='cpu')
 
             lora_keys = list(lora_state_dict.keys())
+
+            if architecture == "MOSS_IMAGE" and not is_moss_lora(lora_keys):
+                raise ValueError("No MOSS-Image layer projections found in this LoRA")
 
             # Detect architecture and LoRA type (for analysis display)
             detected_arch, confidence, method = _detect_architecture_v2(lora_keys, metadata)
@@ -1911,7 +1941,7 @@ def _create_combined_node_class(config: dict):
                 for block in blocks
                 if block != "other_weights"
             ]
-            if architecture == "KREA2":
+            if architecture in ("KREA2", "MOSS_IMAGE"):
                 output_values.append(other_strength if other_enabled else 0.0)
             weights_output = ", ".join(f"{value:.2f}" for value in output_values)
 

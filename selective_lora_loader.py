@@ -12,12 +12,17 @@ import folder_paths
 import comfy.sd
 from safetensors.torch import load_file
 
+from .moss_lora import MOSS_BLOCKS, is_moss_lora, parse_moss_profile
+
 
 def _detect_architecture(keys):
     """Identify LoRA architecture from key patterns."""
     keys_lower = [k.lower() for k in keys]
     keys_str = ' '.join(keys_lower)
     num_keys = len(keys)
+
+    if is_moss_lora(keys):
+        return 'MOSS_IMAGE'
 
     if any(
         re.search(r'(?:diffusion_model|transformer)\.blocks[._]\d+\..*(?:qkv_proj|out_proj|mlp\.fc[12])', k)
@@ -75,6 +80,8 @@ def _detect_architecture(keys):
 
 def _get_architecture_blocks(architecture: str) -> List[str]:
     """Get the ordered list of block names for string chaining."""
+    if architecture == 'MOSS_IMAGE':
+        return MOSS_BLOCKS[:-1]
     if architecture == 'SDXL':
         return [
             'text_encoder_1', 'text_encoder_2', 'input_4', 'input_5', 'input_7',
@@ -104,6 +111,8 @@ def _parse_block_weights_string(weights_str: str, architecture: str) -> Optional
     - positional format: "1.0, 0.0, 0.5, ..."
     - named format: "%default=1.0, te1=0.5, in7-8=1.2"
     """
+    if architecture == 'MOSS_IMAGE':
+        return parse_moss_profile(weights_str)
     if not weights_str or not weights_str.strip():
         return None
 

@@ -16,12 +16,17 @@ import comfy.sd
 import comfy.model_patcher
 from safetensors.torch import load_file
 
+from .moss_lora import extract_moss_layer, is_moss_lora
+
 
 def _detect_architecture(keys):
     """Identify LoRA architecture from key patterns."""
     keys_lower = [k.lower() for k in keys]
     keys_str = ' '.join(keys_lower)
     num_keys = len(keys)
+
+    if is_moss_lora(keys):
+        return 'MOSS_IMAGE'
 
     # Check for Qwen-Image (transformer_blocks with img_mlp/txt_mlp/img_mod/txt_mod)
     if any('transformer_blocks' in k and any(x in k for x in ['img_mlp', 'txt_mlp', 'img_mod', 'txt_mod']) for k in keys_lower):
@@ -97,6 +102,9 @@ def _detect_architecture(keys):
 def _extract_block_id(key: str, architecture: str) -> str:
     """Extract block identifier from a LoRA/model weight key."""
     key_lower = key.lower()
+
+    if architecture == 'MOSS_IMAGE':
+        return extract_moss_layer(key)
 
     if architecture == 'QWEN_IMAGE':
         match = re.search(r'transformer_blocks[._](\d+)', key)
@@ -479,7 +487,7 @@ class LoRALoaderWithAnalysis:
 
         lora_path = folder_paths.get_full_path("loras", lora_name)
         if not lora_path or not os.path.exists(lora_path):
-            return (model, clip, "Error: LoRA file not found", "{}", "")
+            return {"ui": {"analysis_json": ["{}"]}, "result": (model, clip, "Error: LoRA file not found", "{}", "")}
 
         print(f"[LoRA Analyzer] Loading: {lora_name}")
 
@@ -519,7 +527,7 @@ class LoRALoaderWithAnalysis:
         print(f"[LoRA Analyzer] Found {len(patch_analysis)} blocks with patches")
         print(analysis_text)
 
-        return (model_lora, clip_lora, analysis_text, analysis_json, lora_path)
+        return {"ui": {"analysis_json": [analysis_json]}, "result": (model_lora, clip_lora, analysis_text, analysis_json, lora_path)}
 
 
 NODE_CLASS_MAPPINGS = {

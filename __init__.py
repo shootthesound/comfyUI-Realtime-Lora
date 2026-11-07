@@ -20,6 +20,7 @@ from .musubi_wan_lora_trainer import MusubiWanLoraTrainer
 from .lora_analyzer import LoRALoaderWithAnalysis
 from .lora_analyzer_v2 import NODE_CLASS_MAPPINGS as V2_NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as V2_NODE_DISPLAY_NAME_MAPPINGS
 from .selective_lora_loader import SDXLSelectiveLoRALoader, ZImageSelectiveLoRALoader, FLUXSelectiveLoRALoader, WanSelectiveLoRALoader, QwenSelectiveLoRALoader, Krea2SelectiveLoRALoader, MiniMaxH3SelectiveLoRALoader
+from .moss_lora import MOSSImageSelectiveLoRALoader
 from .scheduled_lora_loader import ScheduledLoRALoader
 from .model_layer_analyzer import NODE_CLASS_MAPPINGS as MODEL_LAYER_NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS as MODEL_LAYER_NODE_DISPLAY_NAME_MAPPINGS
 
@@ -59,6 +60,7 @@ NODE_CLASS_MAPPINGS = {
     "QwenSelectiveLoRALoader": QwenSelectiveLoRALoader,
     "Krea2SelectiveLoRALoader": Krea2SelectiveLoRALoader,
     "MiniMaxH3SelectiveLoRALoader": MiniMaxH3SelectiveLoRALoader,
+    "MOSSImageSelectiveLoRALoader": MOSSImageSelectiveLoRALoader,
     "ScheduledLoRALoader": ScheduledLoRALoader,
 }
 
@@ -81,6 +83,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "QwenSelectiveLoRALoader": "Selective LoRA Loader (Qwen)",
     "Krea2SelectiveLoRALoader": "Selective LoRA Loader (Krea 2)",
     "MiniMaxH3SelectiveLoRALoader": "Selective LoRA Loader (MiniMax H3)",
+    "MOSSImageSelectiveLoRALoader": "Selective LoRA Loader (MOSS-Image)",
     "ScheduledLoRALoader": "LoRA Loader (Scheduled)",
 }
 

@@ -216,6 +216,7 @@ Search for these in ComfyUI:
 - **Selective LoRA Loader (Qwen)** - Load Qwen LoRAs with per-block toggles (60 blocks)
 - **Selective LoRA Loader (Krea 2)** - Load Krea 2 LoRAs with per-block toggles (28 main blocks)
 - **Selective LoRA Loader (MiniMax H3)** - Load MiniMax H3 LoRAs with per-block toggles (50 main DiT blocks)
+- **Selective LoRA Loader (MOSS-Image)** - 42 main layers, text profiles, and refined LoRA saving
 
 **V2 Combined Analyzer + Selective Loader (Recommended):**
 
@@ -228,9 +229,18 @@ These combine analysis and selective loading in one node, with strength scheduli
 - **Qwen Analyzer + Selective Loader V2** - 60 blocks with strength scheduling
 - **Krea 2 Analyzer + Selective Loader V2** - 28 main blocks with strength scheduling
 - **MiniMax H3 Analyzer + Selective Loader V2** - 50 main DiT blocks with strength scheduling
+- **MOSS-Image Analyzer + Selective Loader V2** - 42 main layers with analysis, strength scheduling, and saving
 - **FLUX Klein 4B Analyzer + Selective Loader V2** - 25 blocks (5 double + 20 single) with strength scheduling
 - **FLUX Klein 9B Analyzer + Selective Loader V2** - 32 blocks (8 double + 24 single) with strength scheduling
 - **LoRA Loader + Analyzer V2** - Basic V2 analyzer without selective loading
+
+MOSS-Image profiles contain `layer_0` through `layer_41`, followed by `other_weights`.
+Use 42 comma-separated values (other weights default to 1), or 43 to include other weights.
+Named profiles also work, for example `%default=0, layer14-27=1.3, layer_41=-0.5, other=0.2`.
+Connected profile strings override presets and sliders. Both MOSS nodes save the filtered LoRA
+with layer weights baked in, preserving its metadata. Overall strength is not baked in:
+compare the saved file at the same overall strength, with the selective loader bypassed.
+Use current ComfyUI with native MOSS-Image LoRA loading, including separate and fused QKV support.
 
 **Model Layer Editors:**
 

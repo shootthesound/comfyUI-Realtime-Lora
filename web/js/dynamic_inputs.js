@@ -160,30 +160,11 @@ function getImpactColor(score) {
 
 // Get analysis data from connected analysis_json input or stored on node
 function getAnalysisFromInput(node) {
-    // First check if this node has stored analysis data
-    if (node._analysisData) {
-        return node._analysisData;
-    }
-
-    if (!node.inputs) return null;
-
-    // Find the analysis_json input
-    const analysisInput = node.inputs.find(input => input.name === "analysis_json");
-    if (!analysisInput || !analysisInput.link) return null;
-
-    // Get the link and find the source node
-    const link = node.graph?.links?.[analysisInput.link];
-    if (!link) return null;
-
-    const sourceNode = node.graph?.getNodeById(link.origin_id);
-    if (!sourceNode) return null;
-
-    // Check if source node (analyzer) has stored analysis data
-    if (sourceNode._lastAnalysisData) {
-        return sourceNode._lastAnalysisData;
-    }
-
-    return null;
+    const analysisInput = node.inputs?.find(input => input.name === "analysis_json");
+    const link = node.graph?.links?.[analysisInput?.link];
+    const sourceNode = link && node.graph?.getNodeById(link.origin_id);
+    // A connected analyzer may have rerun since this loader cached its own UI result.
+    return sourceNode?._lastAnalysisData ?? sourceNode?._analysisData ?? node._analysisData ?? null;
 }
 
 // Extension for LoRA Analyzer to store analysis data after execution
@@ -215,7 +196,57 @@ app.registerExtension({
 });
 
 // Preset definitions for each selective loader
+function parseMossProfile(text) {
+    if (!text.startsWith("%")) {
+        const parts = text.split(",").map(value => value.trim());
+        if (parts.some(value => !value)) return null;
+        const values = parts.map(Number);
+        if (values.length === 42) values.push(1.0);
+        return values.length === 43 && values.every(Number.isFinite) ? values : null;
+    }
+    let defaultValue = 1.0;
+    const overrides = new Map();
+    for (const part of text.slice(1).split(",")) {
+        const pair = part.split("=");
+        if (pair.length !== 2 || !pair[1].trim()) return null;
+        const name = pair[0].trim().toLowerCase();
+        const value = Number(pair[1]);
+        if (!Number.isFinite(value)) return null;
+        if (name === "default") {
+            defaultValue = value;
+        } else if (name === "other" || name === "other_weights") {
+            overrides.set(42, value);
+        } else if (name === "layer") {
+            for (let i = 0; i < 42; i++) overrides.set(i, value);
+        } else {
+            const match = name.match(/^layer_?(\d+)(?:-(\d+))?$/);
+            if (!match) return null;
+            const start = Number(match[1]);
+            const end = match[2] === undefined ? start : Number(match[2]);
+            if (start > end || end >= 42) return null;
+            for (let i = start; i <= end; i++) overrides.set(i, value);
+        }
+    }
+    return Array.from({length: 43}, (_, i) => overrides.get(i) ?? defaultValue);
+}
+
+const MOSS_IMAGE_PRESETS = {
+    blocks: [...Array.from({length: 42}, (_, i) => `layer_${i}`), "other_weights"],
+    presets: {
+        "Default": { enabled: "ALL", strength: 1.0 },
+        "All Off": { enabled: [], strength: 0.0 },
+        "Half Strength": { enabled: "ALL", strength: 0.5 },
+        "Early Only (0-13)": { enabled: [...Array.from({length: 14}, (_, i) => `layer_${i}`), "other_weights"], strength: 1.0 },
+        "Mid Only (14-27)": { enabled: [...Array.from({length: 14}, (_, i) => `layer_${i + 14}`), "other_weights"], strength: 1.0 },
+        "Late Only (28-41)": { enabled: [...Array.from({length: 14}, (_, i) => `layer_${i + 28}`), "other_weights"], strength: 1.0 },
+        "Evens Only": { enabled: [...Array.from({length: 21}, (_, i) => `layer_${i * 2}`), "other_weights"], strength: 1.0 },
+        "Odds Only": { enabled: [...Array.from({length: 21}, (_, i) => `layer_${i * 2 + 1}`), "other_weights"], strength: 1.0 },
+    }
+};
+
 const SELECTIVE_LOADER_PRESETS = {
+    "MOSSImageSelectiveLoRALoader": MOSS_IMAGE_PRESETS,
+    "MOSSImageAnalyzerSelectiveLoaderV2": MOSS_IMAGE_PRESETS,
     "SDXLSelectiveLoRALoader": {
         blocks: ["text_encoder_1", "text_encoder_2", "input_4", "input_5", "input_7", "input_8", "unet_mid", "output_0", "output_1", "output_2", "output_3", "output_4", "output_5", "other_weights"],
         presets: {
@@ -579,6 +610,7 @@ app.registerExtension({
             "QwenSelectiveLoRALoader",
             "Krea2SelectiveLoRALoader",
             "MiniMaxH3SelectiveLoRALoader",
+            "MOSSImageSelectiveLoRALoader",
             // V2 Combined Analyzer + Selective Loaders
             "ZImageAnalyzerSelectiveLoaderV2",
             "SDXLAnalyzerSelectiveLoaderV2",
@@ -587,6 +619,7 @@ app.registerExtension({
             "QwenAnalyzerSelectiveLoaderV2",
             "Krea2AnalyzerSelectiveLoaderV2",
             "MiniMaxH3AnalyzerSelectiveLoaderV2",
+            "MOSSImageAnalyzerSelectiveLoaderV2",
             "FluxKlein4BAnalyzerSelectiveLoaderV2",
             "FluxKlein9BAnalyzerSelectiveLoaderV2",
             // Model Layer Editor nodes (base model per-block control)
@@ -1471,12 +1504,14 @@ app.registerExtension({
                 if (!widget || !widget.value?.trim() || widget._updating) return;
 
                 const input = widget.value.trim();
-                if (input.startsWith("%")) {
+                const isMoss = nodeName.startsWith("MOSSImage");
+                if (!isMoss && input.startsWith("%")) {
                     return;
                 }
 
-                const values = input.split(",").map(v => parseFloat(v.trim())).filter(v => !Number.isNaN(v));
-                if (values.length !== config.blocks.length) {
+                const values = isMoss ? parseMossProfile(input)
+                    : input.split(",").map(v => parseFloat(v.trim())).filter(v => !Number.isNaN(v));
+                if (!values || values.length !== config.blocks.length) {
                     return;
                 }
 

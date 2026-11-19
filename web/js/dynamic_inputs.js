@@ -596,6 +596,35 @@ const SELECTIVE_LOADER_PRESETS = {
     }
 };
 
+const LAYER_MARKS = ["", "\u2605", "\u25a0", "\u25b2", "\u2191", "\u2193", "\u00d7"];
+const LAYER_MARK_COLORS = {
+    "\u2605": "#f4cf71",
+    "\u25a0": "#79b8ff",
+    "\u25b2": "#c79bff",
+    "\u2191": "#73d99f",
+    "\u2193": "#ffad66",
+    "\u00d7": "#ff7b72",
+};
+const LAYER_MARK_HOLD_MS = 1500;
+
+function setLayerMark(node, name, mark) {
+    if ((node.properties?.lora_layer_marks?.[name] || "") === mark) return;
+    const marks = { ...node.properties?.lora_layer_marks };
+    node.graph?.beforeChange();
+    if (mark) marks[name] = mark;
+    else delete marks[name];
+    node.properties ??= {};
+    node.properties.lora_layer_marks = marks;
+    node.graph?.afterChange();
+    node.setDirtyCanvas(true);
+}
+
+function cycleLayerMark(node, name) {
+    const current = node.properties?.lora_layer_marks?.[name] || "";
+    const index = Math.max(0, LAYER_MARKS.indexOf(current));
+    setLayerMark(node, name, LAYER_MARKS[(index + 1) % LAYER_MARKS.length]);
+}
+
 // Extension for combining block toggle + strength widgets (selective loaders)
 app.registerExtension({
     name: "SelectiveLoRA.CombinedWidgets",
@@ -881,19 +910,8 @@ app.registerExtension({
                 toggle._lastDrawY = y;
                 toggle._lastDrawHeight = widgetHeight;
 
-                const margin = 10;
-                const checkboxSize = 14;
-                const labelWidth = 95; // Fixed label width
-                const valueWidth = 38; // Value display
-                const gap = 6;
-                // Slider takes remaining space
-                const sliderWidth = widgetWidth - margin - checkboxSize - gap - labelWidth - gap - valueWidth - margin - gap;
-
-                // Calculate positions
-                const checkboxX = margin;
-                const labelX = checkboxX + checkboxSize + gap;
-                const sliderX = labelX + labelWidth + gap;
-                const valueX = sliderX + sliderWidth + gap;
+                const { margin, checkboxSize, labelWidth, markerWidth, gap } = toggle.sliderInfo;
+                const { checkboxX, markerX, labelX, sliderX, sliderWidth } = toggle.sliderInfo.getLayout(widgetWidth);
 
                 const enabled = Boolean(toggle.value);
                 // Read strength value (ComfyUI may deserialize as string)
@@ -937,6 +955,13 @@ app.registerExtension({
                 ctx.fillRect(checkboxX + 2, y + (widgetHeight - checkboxSize) / 2 + 2, checkboxSize - 4, checkboxSize - 4);
                 ctx.globalAlpha = 1.0;
 
+                const mark = node.properties?.lora_layer_marks?.[name] || "";
+                ctx.fillStyle = LAYER_MARK_COLORS[mark] || "#777";
+                ctx.font = '13px "Segoe UI Symbol", sans-serif';
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(mark || "\u00b7", markerX + markerWidth / 2, y + widgetHeight / 2);
+
                 // Label
                 ctx.fillStyle = enabled ? "#ddd" : "#666";
                 ctx.font = "11px Arial";
@@ -944,7 +969,7 @@ app.registerExtension({
                 ctx.textBaseline = "middle";
                 // Truncate label if too long
                 let displayLabel = name;
-                const maxLabelWidth = labelWidth - 4;
+                const maxLabelWidth = labelWidth - markerWidth - gap;
                 if (ctx.measureText(displayLabel).width > maxLabelWidth) {
                     while (ctx.measureText(displayLabel + "…").width > maxLabelWidth && displayLabel.length > 3) {
                         displayLabel = displayLabel.slice(0, -1);
@@ -1002,6 +1027,7 @@ app.registerExtension({
             toggle.sliderInfo = {
                 margin: 10,
                 checkboxSize: 14,
+                markerWidth: 18,
                 labelWidth: 95,
                 valueWidth: 38,
                 gap: 6,
@@ -1011,13 +1037,57 @@ app.registerExtension({
                 // are declared in 0.05 increments across the selective loaders.
                 step: 0.05,
                 getLayout: function(widgetWidth) {
-                    const sliderWidth = widgetWidth - this.margin - this.checkboxSize - this.gap - this.labelWidth - this.gap - this.valueWidth - this.margin - this.gap;
                     const checkboxX = this.margin;
                     const labelX = checkboxX + this.checkboxSize + this.gap;
+                    const markerX = labelX + this.labelWidth - this.markerWidth;
                     const sliderX = labelX + this.labelWidth + this.gap;
+                    const sliderWidth = widgetWidth - sliderX - this.gap - this.valueWidth - this.margin;
                     const valueX = sliderX + sliderWidth + this.gap;
-                    return { sliderWidth, checkboxX, sliderX, valueX };
+                    return { sliderWidth, checkboxX, markerX, labelX, sliderX, valueX };
                 }
+            };
+
+            const isMarkerPosition = (pos, node) => {
+                const { markerX } = toggle.sliderInfo.getLayout(node.size[0]);
+                return toggle._lastDrawY !== undefined && toggle._lastDrawHeight !== undefined
+                    && pos[0] >= markerX && pos[0] <= markerX + toggle.sliderInfo.markerWidth
+                    && Math.abs(pos[1] - toggle._lastDrawY - toggle._lastDrawHeight / 2) <= 8;
+            };
+            const startMarkerHold = (node) => {
+                const hold = { cleared: false };
+                hold.timer = setTimeout(() => {
+                    hold.cleared = true;
+                    setLayerMark(node, name, "");
+                }, LAYER_MARK_HOLD_MS);
+                return hold;
+            };
+            const finishMarkerPress = (node, advance = false) => {
+                const press = toggle._markerPress;
+                if (!press) return;
+                clearTimeout(press.timer);
+                toggle.value = press.value;
+                delete toggle._markerPress;
+                if (advance && !press.cleared) cycleLayerMark(node, name);
+            };
+            toggle.tooltip = "Layer marker: click to cycle blank, star, square, triangle, up, down, X. Hold 1.5 seconds to clear. Marks are saved with the workflow.";
+            const originalPointerDown = toggle.onPointerDown;
+            toggle.onPointerDown = function(pointer, node, canvas) {
+                const pos = [canvas.graph_mouse[0] - node.pos[0], canvas.graph_mouse[1] - node.pos[1]];
+                if (!isMarkerPosition(pos, node)) {
+                    return originalPointerDown?.call(this, pointer, node, canvas) ?? false;
+                }
+                const hold = startMarkerHold(node);
+                pointer.onClick = pointer.onDoubleClick = () => {
+                    clearTimeout(hold.timer);
+                    if (!hold.cleared) cycleLayerMark(node, name);
+                };
+                pointer.onDragStart = () => { clearTimeout(hold.timer); };
+                pointer.onDragEnd = () => {};
+                pointer.finally = () => {
+                    clearTimeout(hold.timer);
+                    canvas.node_widget = null;
+                };
+                return true;
             };
 
             // Mouse handling for slider with precise Y-axis hit detection and click-to-jump.
@@ -1038,6 +1108,23 @@ app.registerExtension({
                 const localY = absoluteY - widgetY;
                 const trackCenterY = widgetHeight / 2;
                 const verticalTolerance = 4;
+
+                if (!toggle._wasDragging && isMarkerPosition(pos, node)) {
+                    if (event.type === "pointerdown") {
+                        finishMarkerPress(node);
+                        toggle._markerPress = startMarkerHold(node);
+                        toggle._markerPress.value = toggle.value;
+                    } else if (event.type === "pointerup") {
+                        finishMarkerPress(node, true);
+                    } else if (event.type === "pointercancel") {
+                        finishMarkerPress(node);
+                    }
+                    return true;
+                }
+                if (toggle._markerPress) {
+                    finishMarkerPress(node);
+                    return true;
+                }
 
                 const inSliderX = localX >= layout.sliderX && localX <= layout.sliderX + layout.sliderWidth;
                 const inSliderY = Math.abs(localY - trackCenterY) <= verticalTolerance;
